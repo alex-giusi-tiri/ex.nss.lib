@@ -1,0 +1,4 @@
+#! /bin/bash
+
+php $(dirname "${0}")'/handler.php' "$@";
+
