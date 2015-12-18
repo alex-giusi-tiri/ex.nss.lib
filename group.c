@@ -13,7 +13,7 @@
 
 /*
 */
-enum nss_status group_get (const char * get_type, const char * get, struct group * result, char * buffer, size_t buffer_size, int * error)
+enum nss_status group_get (const char * getter_type, const char * getter, struct group * result, char * buffer, size_t buffer_size, int * error)
 {
 	signed int result_error;
 	gid_t id;
@@ -27,25 +27,25 @@ enum nss_status group_get (const char * get_type, const char * get, struct group
 	
 	FILE * file;
 	char line [PATH_MAX];
-	char exe [PATH_MAX] = "";
+	char command [PATH_MAX] = "";
 	
 	
-	// executable . " group get " . get_type . " " . get
+	// executable . " group get " . getter_type . " " . getter
 	// 5
-	strcat (exe, executable);
-	strcat (exe, " password get ");
-	strcat (exe, get_type);
-	strcat (exe, " ");
-	strcat (exe, get);
+	strcat (command, executable);
+	strcat (command, " group get ");
+	strcat (command, getter_type);
+	strcat (command, " ");
+	strcat (command, getter);
 	
 	// Open the command for reading.
-	file = popen (exe, "r");
+	file = popen (command, "r");
 	
 	if (file == NULL)
 	{
 		pclose (file);
 		
-		//NSS_DEBUG ("Failed to run the command.\n");
+		NSS_DEBUG ("Failed to run the command : \"%s\".\n", command);
 		
 		return NSS_STATUS_UNAVAIL;
 	}
@@ -188,12 +188,12 @@ enum nss_status group_get (const char * get_type, const char * get, struct group
 }
 
 /*
-	Get group by name.
+	Get group by its name.
 	
-	name			:	Name of the group.
-	buffer			:	Buffer which will contain all string pointed to by gbuf entries.
-	buffer_size		:	Buffer size.
-	error			:	Pointer to "error_number", which is filled if an error occurs.
+	name		:	Name of the group.
+	buffer		:	Buffer which will contain all string pointed to by gbuf entries.
+	buffer_size	:	Size of the Buffer.
+	error		:	Pointer to "error_number", which is filled up if an error occurs.
 */
 
 enum nss_status _nss_sqlite_getgrnam_r (const char * name, struct group * result, char * buffer, size_t buffer_size, int * error)
@@ -202,7 +202,7 @@ enum nss_status _nss_sqlite_getgrnam_r (const char * name, struct group * result
 }
 
 /*
-	Get group by ID.
+	Get group by its ID.
 	
 	@param gid GID.
 	@param buf Buffer which will contain all string pointed to by gbuf entries.
@@ -212,7 +212,11 @@ enum nss_status _nss_sqlite_getgrnam_r (const char * name, struct group * result
 
 enum nss_status _nss_exo_getgrgid_r (gid_t id, struct group * result, char * buffer, size_t buffer_size, int * error)
 {
-	return group_get ("id", itos (id), result, buffer, buffer_size, error);
+	// Include the terminating NULL character (byte).
+	char id_text [12];
+	snprintf (id_text, 12, "%d", id);
+	
+	return group_get ("id", id_text, result, buffer, buffer_size, error);
 }
 
 /*
@@ -234,24 +238,24 @@ enum nss_status _nss_exo_initgroups_dyn (const char * name, gid_t group_id, long
 	//const char * id_text;
 	//const char * name;
 	//const char * password;
-	const char * count_text;
-	unsigned long long int count;
+	// const char * count_text;
+	unsigned long int count;
 	//unsigned long long int member_index;
 	//void * buffer_memory;
 	
 	FILE * file;
 	char line [PATH_MAX];
-	char exe [PATH_MAX] = "";
-	char group_id_text [PATH_MAX];
+	char command [PATH_MAX] = "";
+	//char group_id_text [PATH_MAX];
 	
-	// executable . " groups get name " . user/* . " " . itos (gid)*/
-	// Argument count: 4
-	strcat (exe, executable);
-	strcat (exe, " groups get name ");
-	strcat (exe, name);
+	// executable . " groups get name " . user
+	// Arguments count: 5
+	strcat (command, executable);
+	strcat (command, " groups get name ");
+	strcat (command, name);
 	
 	// Open the command for reading.
-	file = popen (exe, "r");
+	file = popen (command, "r");
 	
 	if (file == NULL)
 	{
@@ -263,7 +267,7 @@ enum nss_status _nss_exo_initgroups_dyn (const char * name, gid_t group_id, long
 	}
 	
 	
-	// Get the count of groups (it excludes the main group).
+	// Get the count of groups (this excludes the main group).
 	if (fgets (line, PATH_MAX, file) == NULL)
 	{
 		pclose (file);
@@ -272,14 +276,15 @@ enum nss_status _nss_exo_initgroups_dyn (const char * name, gid_t group_id, long
 		
 		return NSS_STATUS_UNAVAIL;
 	}
-	count_text = strdup (line);
+	//count_text = strdup (line);
 	errno = 0;
-	count = strtoul (count_text, NULL, 10);
+	//count = strtoul (count_text, NULL, 10);
+	count = strtoul (line, NULL, 10);
 	if (errno != 0)
 	{
 		pclose (file);
 		
-		free (count_text);
+		//free (count_text);
 		
 		NSS_DEBUG ("getspnam_r : Failed to parse number.n");
 		
@@ -304,7 +309,7 @@ enum nss_status _nss_exo_initgroups_dyn (const char * name, gid_t group_id, long
 	
 	if (limit > 0 && (* index) + 1 + count > limit)
 	{
-		free (count_text);
+		//free (count_text);
 		
 		// limit exceeded; tell caller to try with a larger one
 		//NSS_ERROR ("initgroups_dyn: limit was too low\n");
@@ -343,9 +348,11 @@ enum nss_status _nss_exo_initgroups_dyn (const char * name, gid_t group_id, long
 	while (fgets (line, PATH_MAX, file) != NULL)
 	{
 		//printf ("%s", line);
-		strcpy (group_id_text, line);
+		//strcpy (group_id_text, line);
 		//group_id = stoi (group_id_text);
-		(* groups) [* index] = group_id;
+		// (* groups) [* index] = group_id;
+		line [strcspn (line, "\r\n")] = 0;
+		(* groups) [* index] = strtoul (line, NULL, 10);
 		
 		//++ (* index);
 	}
@@ -359,14 +366,14 @@ enum nss_status _nss_exo_initgroups_dyn (const char * name, gid_t group_id, long
 		//}
 		//free (groups);
 			//result -> gr_mem = NULL;
-		free (count_text);
+		// free (count_text);
 		
 		//NSS_DEBUG ("Retrieving group #%d : Failure\n", id);
 		
 		return NSS_STATUS_UNAVAIL;
 	}
 	
-	free (count_text);
+	// free (count_text);
 	
 	//NSS_DEBUG ("Retrieved group #%d: %s\n", id, name);
 	

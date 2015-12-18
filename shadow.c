@@ -35,17 +35,17 @@ enum nss_status _nss_exo_getspnam_r (const char * name, struct spwd * result, ch
 	
 	FILE * file;
 	char line [PATH_MAX];
-	char exe [PATH_MAX] = "";
+	char command [PATH_MAX] = "";
 	
 	
 	// executable . " password get " . get_type . " " . get
 	// Argument count: 5
-	strcat (exe, executable);
-	strcat (exe, " password get name ");
-	strcat (exe, name);
+	strcat (command, executable);
+	strcat (command, " password get name ");
+	strcat (command, name);
 	
 	// Open the command for reading.
-	file = popen (exe, "r");
+	file = popen (command, "r");
 
 	if (file == NULL)
 	{

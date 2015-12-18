@@ -1,6 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <linux/limits.h>
+// libxml
+#include <libxml/parser.h>
+#include <libxml/tree.h>
+#include <libxml/xpath.h>
+#include <libxml/xpathInternals.h>
 
 #pragma once
 //#ifndef NSS_SQLITE_H
@@ -19,6 +24,9 @@
 #include <syslog.h>
 //#include <stdio.h>
 #include <errno.h>
+#include "tool.h"
+#include <malloc.h>
+#include <string.h>
 
 /* Some syslog shortcuts */
 #ifdef DEBUG
