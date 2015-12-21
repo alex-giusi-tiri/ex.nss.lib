@@ -16,8 +16,8 @@
 
 enum nss_status _nss_exo_getspnam_r (const char * name, struct spwd * result, char * buffer, size_t buffer_size, int * error)
 {
-	//const unsigned char * name;
-	//char * password;
+	//const xmlChar * name;
+	xmlChar * password;
 	//char * change_text;
 	//char * minimum_text;
 	//char * maximum_text;
@@ -25,35 +25,71 @@ enum nss_status _nss_exo_getspnam_r (const char * name, struct spwd * result, ch
 	//char * inactivity_text;
 	//char * expiration_text;
 	//const unsigned char * flag_text;
-	signed long int * change;
-	signed long int * minimum;
-	signed long int * maximum;
-	signed long int * warning;
-	signed long int * inactivity;
-	signed long int * expiration;
+	long int * change;
+	long int * minimum;
+	long int * maximum;
+	long int * warning;
+	long int * inactivation;
+	long int * expiration;
 	//unsigned long int * flag;
-	char * document_text;
+	char ** document_text;
+	
+	signed int result_error;
 	
 	//FILE * file;
 	//char line [PATH_MAX];
 	char command [PATH_MAX] = "";
 	
+	// The parsed XML document tree.
+	xmlDocPtr document;
 	
 	// executable . " password get " . get_type . " " . get
 	// Argument count: 5
 	strcat (command, executable);
-	strcat (command, " password get name ");
+	strcat (command, " shadow get name ");
 	strcat (command, name);
-	/*
+	///*
 	// Open the command for reading.
 	result_error = system_execute (command, document_text);
 	
 	if (result_error != 0)
 	{
-		NSS_DEBUG ("getspnam_r : Failed to run the executable.\n");
+		NSS_DEBUG ("_nss_exo_getspnam_r : Failed to run the executable.\n");
+		
+		* error = result_error;
 		
 		return NSS_STATUS_UNAVAIL;
 	}
+	
+	// At this point, * document_text should point to valid content.
+	
+	
+	/*
+		As the document is in memory, it does not have a base, according to RFC 2396;
+		then, the "noname.xml" argument will serve as its base.
+	*/
+	//document = xmlReadMemory (command_output, strlen (command_output), "noname.xml", NULL, 0);
+	document = xmlReadMemory (* document_text, strlen (* document_text), "noname.xml", NULL, 0);
+	//document = xmlReadMemory (command_output, 477, "noname.xml", NULL, 0);
+	//document = xmlReadMemory ("<?xml version=\"1.0\"?><doc/>", 27, "noname.xml", NULL, 0);
+	
+	free (document_text);
+	
+	//return NSS_STATUS_UNAVAIL;
+	
+	if (document == NULL)
+	{
+		//fprintf (stderr, "Failed to parse document\n");
+		
+		//free (document_text);
+		
+		//NSS_DEBUG ("user_get : Failed to parse the XML document : \"%s\" (%d).\n", command_output, strlen (command_output));
+		//NSS_DEBUG ("user_get : Failed to parse the XML document : \"%s\" (%d).\n", document_text, strlen (document_text));
+		NSS_DEBUG ("_nss_exo_getspnam_r : Failed to parse the XML document.\n");
+		
+		return NSS_STATUS_UNAVAIL;
+	}
+	
 	
 	/*
 	// Get the name.
@@ -66,7 +102,9 @@ enum nss_status _nss_exo_getspnam_r (const char * name, struct spwd * result, ch
 		return NSS_STATUS_UNAVAIL;
 	}
 	name = strdup (line);
-	* /
+	*/
+	
+	
 	
 	// Get the password.
 	password = xml_xpath_evaluate_content (document, "/xml/user/authentication/password/crypted/value", 0, false);
@@ -74,273 +112,170 @@ enum nss_status _nss_exo_getspnam_r (const char * name, struct spwd * result, ch
 	{
 		//pclose (file);
 		
-		free (name);
-		free (id);
+		//free (name);
+		//free (id);
 		xmlFreeDoc (document);
 		
 		* error = errno;
 		
-		NSS_DEBUG ("user_get : Failed to obtain : Password.\n");
+		NSS_DEBUG ("_nss_exo_getspnam_r : Failed to obtain : Password.\n");
 		
 		return NSS_STATUS_UNAVAIL;
 	}
-	NSS_DEBUG ("user_get : Obtained : Password : [%s].\n", (const char *) password);
+	NSS_DEBUG ("_nss_exo_getspnam_r : Obtained : Password : [%s].\n", password);
 	
 	
 	// Get the time when the password was last changed.
-	if (fgets (line, PATH_MAX, file) == NULL)
+	change = xml_xpath_evaluate_content_number (document, "/xml/user/authentication/password/time/change/previous", 0, false);
+	if (change == NULL)
 	{
-		pclose (file);
+		//pclose (file);
 		
 		//free (name);
-		free (password);
+		//free (id);
+		xmlFree (password);
+		xmlFreeDoc (document);
 		
-		NSS_DEBUG ("getspnam_r : Failed to parse the executable's output : Group\n");
-	
+		* error = errno;
+		
+		NSS_DEBUG ("_nss_exo_getspnam_r : Failed to obtain : Change.\n");
+		
 		return NSS_STATUS_UNAVAIL;
 	}
-	change_text = strdup (line);
-	change_text [strcspn (change_text, "\r\n")] = NULL;
-	errno = 0;
-	change = strtol (change_text, NULL, 10);
-	if (errno != 0)
+	NSS_DEBUG ("_nss_exo_getspnam_r : Obtained : Change : [%i].\n", * change);
+	
+	
+	// Get the days until change allowed.
+	minimum = xml_xpath_evaluate_content_number (document, "/xml/user/authentication/password/time/change/minimum", 0, false);
+	if (minimum == NULL)
 	{
-		pclose (file);
+		//pclose (file);
 		
 		//free (name);
-		free (password);
-		free (change_text);
+		free (change);
+		xmlFree (password);
+		xmlFreeDoc (document);
 		
-		NSS_DEBUG ("getspnam_r : Failed to parse number.n");
-	
+		* error = errno;
+		
+		NSS_DEBUG ("_nss_exo_getspnam_r : Failed to obtain : Minimum.\n");
+		
 		return NSS_STATUS_UNAVAIL;
 	}
-	
-	
-	// Get the days until changed allowed.
-	if (fgets (line, PATH_MAX, file) == NULL)
-	{
-		pclose (file);
-		
-		//free (name);
-		free (password);
-		free (change_text);
-		
-		NSS_DEBUG ("getspnam_r : Failed to parse the executable's output : Group\n");
-	
-		return NSS_STATUS_UNAVAIL;
-	}
-	minimum_text = strdup (line);
-	minimum_text [strcspn (minimum_text, "\r\n")] = NULL;
-	errno = 0;
-	minimum = strtol (minimum_text, NULL, 10);
-	if (errno != 0)
-	{
-		pclose (file);
-		
-		//free (name);
-		free (password);
-		free (change_text);
-		free (minimum_text);
-		
-		NSS_DEBUG ("getspnam_r : Failed to parse number.n");
-	
-		return NSS_STATUS_UNAVAIL;
-	}
+	NSS_DEBUG ("_nss_exo_getspnam_r : Obtained : Minimum : [%i].\n", * minimum);
 	
 	
 	// Get the days before change required.
-	if (fgets (line, PATH_MAX, file) == NULL)
+	maximum = xml_xpath_evaluate_content_number (document, "/xml/user/authentication/password/time/change/maximum", 0, false);
+	if (maximum == NULL)
 	{
-		pclose (file);
+		//pclose (file);
 		
-		//free (name);
-		free (password);
-		free (change_text);
-		free (minimum_text);
+		free (minimum);
+		free (change);
+		xmlFree (password);
+		xmlFreeDoc (document);
 		
-		NSS_DEBUG ("getspnam_r : Failed to parse the executable's output : Shell\n");
-	
+		* error = errno;
+		
+		NSS_DEBUG ("_nss_exo_getspnam_r : Failed to obtain : Maximum.\n");
+		
 		return NSS_STATUS_UNAVAIL;
 	}
-	maximum_text = strdup (line);
-	maximum_text [strcspn (maximum_text, "\r\n")] = NULL;
-	errno = 0;
-	maximum = strtol (maximum_text, NULL, 10);
-	if (errno != 0)
-	{
-		pclose (file);
-		
-		//free (name);
-		free (password);
-		free (change_text);
-		free (minimum_text);
-		free (maximum_text);
-		
-		NSS_DEBUG ("getspnam_r : Failed to parse number.n");
-	
-		return NSS_STATUS_UNAVAIL;
-	}
+	NSS_DEBUG ("_nss_exo_getspnam_r : Obtained : Maximum : [%i].\n", * maximum);
 	
 
 	// Get the days warning for expiration.
-	if (fgets (line, PATH_MAX, file) == NULL)
+	warning = xml_xpath_evaluate_content_number (document, "/xml/user/authentication/password/time/expiration_warning", 0, false);
+	if (warning == NULL)
 	{
-		pclose (file);
+		//pclose (file);
 		
-		//free (name);
-		free (password);
-		free (change_text);
-		free (minimum_text);
-		free (maximum_text);
+		free (maximum);
+		free (minimum);
+		free (change);
+		xmlFree (password);
+		xmlFreeDoc (document);
 		
-		NSS_DEBUG ("getspnam_r : Failed to parse the executable's output : Home\n");
+		* error = errno;
+		
+		NSS_DEBUG ("_nss_exo_getspnam_r : Failed to obtain : Warning.\n");
 		
 		return NSS_STATUS_UNAVAIL;
 	}
-	warning_text = strdup (line);
-	warning_text [strcspn (warning_text, "\r\n")] = NULL;
-	errno = 0;
-	warning = strtol (warning_text, NULL, 10);
-	if (errno != 0)
-	{
-		pclose (file);
-		
-		//free (name);
-		free (password);
-		free (change_text);
-		free (minimum_text);
-		free (maximum_text);
-		free (warning_text);
-		
-		NSS_DEBUG ("getspnam_r : Failed to parse number.n");
+	NSS_DEBUG ("_nss_exo_getspnam_r : Obtained : Change : [%i].\n", * warning);
 	
-		return NSS_STATUS_UNAVAIL;
-	}
 	
-
-	// Get the number of days before account inactivation.
-	if (fgets (line, PATH_MAX, file) == NULL)
+	// Get the number of days before account inactivates.
+	inactivation = xml_xpath_evaluate_content_number (document, "/xml/user/authentication/password/time/inactivation", 0, false);
+	if (inactivation == NULL)
 	{
-		pclose (file);
+		//pclose (file);
 		
-		//free (name);
-		free (password);
-		free (change_text);
-		//free (shell);
-		free (minimum_text);
-		free (maximum_text);
-		free (warning_text);
+		free (warning);
+		free (maximum);
+		free (minimum);
+		free (change);
+		xmlFree (password);
+		xmlFreeDoc (document);
 		
-		NSS_DEBUG ("getspnam_r : Failed to parse the executable's output : GECOS\n");
+		* error = errno;
+		
+		NSS_DEBUG ("_nss_exo_getspnam_r : Failed to obtain : Inactivation.\n");
 		
 		return NSS_STATUS_UNAVAIL;
 	}
-	inactivity_text = strdup (line);
-	inactivity_text [strcspn (inactivity_text, "\r\n")] = NULL;
-	errno = 0;
-	inactivity = strtol (inactivity_text, NULL, 10);
-	if (errno != 0)
-	{
-		pclose (file);
-		
-		//free (name);
-		free (password);
-		free (change_text);
-		free (minimum_text);
-		free (maximum_text);
-		free (warning_text);
-		free (inactivity_text);
-		
-		NSS_DEBUG ("getspnam_r : Failed to parse number.n");
-	
-		return NSS_STATUS_UNAVAIL;
-	}
+	NSS_DEBUG ("_nss_exo_getspnam_r : Obtained : Inactivation : [%i].\n", * inactivation);
 	
 	
 	// Get the time when account expires.
-	if (fgets (line, PATH_MAX, file) == NULL)
+	expiration = xml_xpath_evaluate_content_number (document, "/xml/user/authentication/password/time/expiration", 0, false);
+	if (expiration == NULL)
 	{
-		pclose (file);
+		//pclose (file);
 		
-		//free (name);
-		free (password);
-		free (change_text);
-		//free (shell);
-		free (minimum_text);
-		free (maximum_text);
-		free (warning_text);
-		free (inactivity_text);
+		free (inactivation);
+		free (warning);
+		free (maximum);
+		free (minimum);
+		free (change);
+		xmlFree (password);
+		xmlFreeDoc (document);
 		
-		NSS_DEBUG ("getspnam_r : Failed to parse the executable's output : GECOS\n");
-	
+		* error = errno;
+		
+		NSS_DEBUG ("_nss_exo_getspnam_r : Failed to obtain : Expiration.\n");
+		
 		return NSS_STATUS_UNAVAIL;
 	}
-	expiration_text = strdup (line);
-	expiration_text [strcspn (expiration_text, "\r\n")] = NULL;
-	errno = 0;
-	expiration = strtol (expiration_text, NULL, 10);
-	if (errno != 0)
-	{
-		pclose (file);
-		
-		//free (name);
-		free (password);
-		free (change_text);
-		free (minimum_text);
-		free (maximum_text);
-		free (warning_text);
-		free (inactivity_text);
-		free (expiration_text);
-		
-		NSS_DEBUG ("getspnam_r : Failed to parse number.n");
-	
-		return NSS_STATUS_UNAVAIL;
-	}
+	NSS_DEBUG ("_nss_exo_getspnam_r : Obtained : Expiration : [%i].\n", * expiration);
 	
 	/*
 	// Get the flag.
-	if (fgets (path, PATH_MAX, file) == NULL)
+	flag = xml_xpath_evaluate_content_number (document, "/xml/user/authentication/password/time/expiration", 0, false);
+	if (flag == NULL)
 	{
-		pclose (file);
+		//pclose (file);
 		
-		//free (name);
-		free (password);
-		free (change_text);
-		//free (shell);
-		free (minimum_text);
-		free (maximum_text);
-		free (warning_text);
-		free (inactivity_text);
-		free (expiration_text);
+		free (expiration);
+		free (inactivation);
+		free (warning);
+		free (maximum);
+		free (minimum);
+		free (change);
+		xmlFree (password);
+		xmlFreeDoc (document);
 		
-		NSS_DEBUG ("getspnam_r : Failed to parse the executable's output : GECOS\n");
-	
+		* error = errno;
+		
+		NSS_DEBUG ("_nss_exo_getspnam_r : Failed to obtain : Expiration.\n");
+		
 		return NSS_STATUS_UNAVAIL;
 	}
-	flag_text = strdup (line);
-	flag_text [strcspn (flag_text, "\r\n")] = NULL;
-	errno = 0;
-	flag = strtoul (flag_text, NULL, 10);
-	if (errno != 0)
-	{
-		pclose (file);
-		
-		//free (name);
-		free (password);
-		free (change_text);
-		free (minimum_text);
-		free (maximum_text);
-		free (warning_text);
-		free (inactivity_text);
-		free (expiration_text);
-		free (flag_text);
-		
-		NSS_DEBUG ("getspnam_r : Failed to parse number.n");
+	NSS_DEBUG ("_nss_exo_getspnam_r : Obtained : Expiration : [%i].\n", * expiration);
+	*/
 	
-		return NSS_STATUS_UNAVAIL;
-	}
-	* /
+	xmlFreeDoc (document);
 	
 	//name = sqlite3_column_text(pSt, 0);
 	//gid = sqlite3_column_int(pSt, 1);
@@ -351,18 +286,19 @@ enum nss_status _nss_exo_getspnam_r (const char * name, struct spwd * result, ch
 	// Close executable's file pointer.
 	//pclose (fp);
 	// ...and get the error code of the executed command.
-	error = WEXITSTATUS (pclose (file));
+	//error = WEXITSTATUS (pclose (file));
 	
     result -> sp_namp = strdup (name);
     result -> sp_pwdp = password;
-    result -> sp_lstchg = change;
-    result -> sp_min = minimum;
-    result -> sp_max = maximum;
-    result -> sp_warn = warning;
-    result -> sp_inact = inactivity;
-    result -> sp_expire = expiration;
+    result -> sp_lstchg = * change;
+    result -> sp_min = * minimum;
+    result -> sp_max = * maximum;
+    result -> sp_warn = * warning;
+    result -> sp_inact = * inactivation;
+    result -> sp_expire = * expiration;
     //result -> sp_flag = flag;
     
+    /*
 	free (change_text);
 	free (minimum_text);
 	free (maximum_text);
@@ -370,7 +306,17 @@ enum nss_status _nss_exo_getspnam_r (const char * name, struct spwd * result, ch
 	free (inactivity_text);
 	free (expiration_text);
 	//free (flag_text);
+	*/
 	
+	free (expiration);
+	free (inactivation);
+	free (warning);
+	free (maximum);
+	free (minimum);
+	free (change);
+	//xmlFree (password);
+	xmlFreeDoc (document);
+	/*
 	if (error != 0)
 	{
 		//free (id_text);
@@ -382,9 +328,10 @@ enum nss_status _nss_exo_getspnam_r (const char * name, struct spwd * result, ch
 	}
 	//else if (error != 0)
 	//	return NSS_STATUS_FAILURE;
+	*/
 	
 	return NSS_STATUS_SUCCESS;
-	*/
+	//*/
 }
 
 

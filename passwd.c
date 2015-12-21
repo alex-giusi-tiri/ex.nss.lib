@@ -41,9 +41,10 @@ enum nss_status user_get (const char * get_type, const char * get, struct passwd
 	//const xmlNodeSetPtr nodes;
 	//const xmlNodePtr node;
 	
-	//char line [PATH_MAX];
+	char line [PATH_MAX];
 	//char line [INT_MAX / 8];
-	char line [USHRT_MAX];
+	//char line [USHRT_MAX];
+	//char line [SSIZE_MAX];
 	char command [PATH_MAX] = "";
 	//char command_output [ULLONG_MAX] = "";
 	//char command_output [SHRT_MAX + 1] = "";
@@ -52,7 +53,7 @@ enum nss_status user_get (const char * get_type, const char * get, struct passwd
 	// executable . " user get " . argument_type . " " . argument
 	// Argument count: 5
 	strcat (command, executable);
-	strcat (command, " user get ");
+	strcat (command, " passwd get ");
 	strcat (command, get_type);
 	strcat (command, " ");
 	strcat (command, get);
@@ -116,8 +117,11 @@ enum nss_status user_get (const char * get_type, const char * get, struct passwd
 	//NSS_DEBUG ("user_get : (sizeof (char) * (SHRT_MAX + 1)) : \"%d\"", (sizeof (char) * (SHRT_MAX + 1)));
 	
 	
+	//
+	// Loops here.
+	//
 	// Read the output one line at a time and save the line.
-	while (fgets (line, USHRT_MAX - 1, file) != NULL)
+	while (fgets (line, PATH_MAX, file) != NULL)
 	{
 		//printf ("%s", line);
 		NSS_DEBUG ("user_get : Read : \"%s\"", line);
@@ -385,7 +389,10 @@ enum nss_status user_get (const char * get_type, const char * get, struct passwd
 	}
 	NSS_DEBUG ("user_get : Obtained : GECOS field : [%s].\n", (const char *) gecos);
 	
-
+	//
+	// Loops here?
+	//
+	
 	//name = sqlite3_column_text(pSt, 0);
 	//gid = sqlite3_column_int(pSt, 1);
 	////gid = sqlite3_column_text(pSt, 1);

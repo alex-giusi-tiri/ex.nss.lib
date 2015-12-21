@@ -260,33 +260,23 @@ const xmlXPathObjectPtr/*xmlNodeSetPtr*/ xml_xpath_evaluate (const xmlDocPtr doc
 	return xpath_object;
 }
 
-const signed int system_execute (const char * command, char ** output)
+const signed int execute (const char * command, char ** output)
 {
-	/*
+	///*
 	//* error = 123;
 	
-	NSS_DEBUG ("user_get : Looking for the user \"%s\" (%s).\n", get, get_type);
+	NSS_DEBUG ("execute : executing command \"%s\".\n", command);
 	
 	//return NSS_STATUS_UNAVAIL;
 	
-	signed int result_error;
+	signed int error;
 	unsigned long long int command_output_size = sizeof (char) * (SHRT_MAX + 1);
-	//size_t command_output_size = sizeof (char) * 8;
-	uid_t * id;
-	gid_t * group_id;
-	xmlChar * name;
-	//xmlChar * id_text;
-	xmlChar * password;
-	//const unsigned char * group_name;
-	//xmlChar * group_id_text;
-	xmlChar * shell;
-	xmlChar * home;
-	xmlChar * gecos;
+	//unsigned long long int command_output_size = sizeof (char) * 8;
 	
 	FILE * file;
 	
 	// The parsed XML document tree.
-	xmlDocPtr document;
+	// xmlDocPtr document;
 	//xmlNodePtr root_element;
 	// Reused variables for each user detail.
 	//xmlXPathObjectPtr xpobj;	// XPath OBJect
@@ -296,24 +286,23 @@ const signed int system_execute (const char * command, char ** output)
 	//char line [PATH_MAX];
 	//char line [INT_MAX / 8];
 	char line [USHRT_MAX];
-	char command [PATH_MAX] = "";
+	//char command [PATH_MAX] = "";
 	//char command_output [ULLONG_MAX] = "";
 	//char command_output [SHRT_MAX + 1] = "";
-	char * command_output, * command_output_temp, * document_text;
+	char * command_output, * command_output_temp, * command_output_copy;
 	
 	// executable . " user get " . argument_type . " " . argument
 	// Argument count: 5
-	strcat (command, executable);
-	strcat (command, " user get ");
-	strcat (command, get_type);
-	strcat (command, " ");
-	strcat (command, get);
+	//strcat (command, executable);
+	//strcat (command, " user get ");
+	//strcat (command, get_type);
+	//strcat (command, " ");
+	//strcat (command, get);
 	
-	NSS_DEBUG ("user_get : Opening command... : \"%s\"", command);
+	
+	NSS_DEBUG ("execute : Opening command...\n");
 	// Open the command for reading.
 	file = popen (command, "r");
-	
-	NSS_DEBUG ("user_get : Reading...");
 	
 	//NSS_DEBUG ("user_get : fgets (line, PATH_MAX, file) : \"%d\".", fgets (line, PATH_MAX, file));
 	//NSS_DEBUG ("user_get : Retrieved line : \"%s\"\n", line);
@@ -333,13 +322,15 @@ const signed int system_execute (const char * command, char ** output)
 	
 	if (file == NULL)
 	{
-		NSS_DEBUG ("user_get : Failed to run the executable : \"%s\".\n", command);
+		NSS_DEBUG ("execute : Failed to open command.\n");
 		
-		* error = errno;
+		//* error = errno;
 		
-		return NSS_STATUS_UNAVAIL;
+		return EXIT_FAILURE;
 	}
-	NSS_DEBUG ("user_get : Succeeded in running the executable : \"%s\".\n", command);
+	NSS_DEBUG ("execute : Opened command.\n");
+	
+	NSS_DEBUG ("execute : Reading output of command...\n");
 	
 	//while (fgets (path, sizeof (path), fp) != NULL)
 	//{
@@ -372,7 +363,7 @@ const signed int system_execute (const char * command, char ** output)
 	while (fgets (line, USHRT_MAX - 1, file) != NULL)
 	{
 		//printf ("%s", line);
-		NSS_DEBUG ("user_get : Read : \"%s\"", line);
+		NSS_DEBUG ("execute : Read line : \"%s\"", line);
 		
 		//NSS_DEBUG ("user_get : strlen (command_output) + strlen (line) + 1 : \"%d\"", strlen (command_output) + strlen (line) + 1);
 		//NSS_DEBUG ("user_get : sizeof (command_output) : \"%d\"", sizeof (command_output));
@@ -390,9 +381,9 @@ const signed int system_execute (const char * command, char ** output)
 				
 				free (command_output);
 				
-				NSS_DEBUG ("user_get : \"realloc ()\" failed.\n");
+				NSS_DEBUG ("execute : \"realloc ()\" failed.\n");
 				
-				return NSS_STATUS_UNAVAIL;
+				return EXIT_FAILURE;
 			}
 			
 			command_output = command_output_temp;
@@ -405,7 +396,7 @@ const signed int system_execute (const char * command, char ** output)
 		strcat (command_output, line);
 	}
 	
-	document_text = strdup (command_output);
+	command_output_copy = strdup (command_output);
 	
 	
 	//return NSS_STATUS_UNAVAIL;
@@ -418,68 +409,35 @@ const signed int system_execute (const char * command, char ** output)
 	//return NSS_STATUS_UNAVAIL;
 	
 	
-	result_error = WEXITSTATUS (pclose (file));
-	if (result_error != 0)
+	error = WEXITSTATUS (pclose (file));
+	NSS_DEBUG ("execute : Command returned error %i.\n", error);
+	if (error != 0)
 	{
 		
-		free (document_text);
+		free (command_output_copy);
 		
-		* error = errno;
+		//* error = errno;
 		
-		NSS_DEBUG ("user_get : The executable did not run properly : the command was \"%s\"; the error was [%i].\n", command, result_error);
-		
-		return NSS_STATUS_UNAVAIL;
+		return error;
 	}
 	
-	NSS_DEBUG ("user_get : Obtained command output : \"%s\".\n", document_text);
+	NSS_DEBUG ("execute : Command executed successfully.");
 	
 	//printf ("user_get : Obtained command output [24] : \"%c\".\n", command_output [24]);
 	
 	//return NSS_STATUS_UNAVAIL;
 	
-	if (document_text == NULL)
+	if (command_output_copy == NULL)
 	{
-		NSS_DEBUG ("user_get : Failed to duplicate the XML document.\n");
+		NSS_DEBUG ("execute : Failed to copy the output.\n");
 		
-		return NSS_STATUS_UNAVAIL;
-	}
-	/*
-		As the document is in memory, it does not have a base, according to RFC 2396;
-		then, the "noname.xml" argument will serve as its base.
-	* /
-	//document = xmlReadMemory (command_output, strlen (command_output), "noname.xml", NULL, 0);
-	document = xmlReadMemory (document_text, strlen (document_text), "noname.xml", NULL, 0);
-	//document = xmlReadMemory (command_output, 477, "noname.xml", NULL, 0);
-	//document = xmlReadMemory ("<?xml version=\"1.0\"?><doc/>", 27, "noname.xml", NULL, 0);
-	
-	free (document_text);
-	
-	//return NSS_STATUS_UNAVAIL;
-	
-	if (document == NULL)
-	{
-		//fprintf (stderr, "Failed to parse document\n");
+		free (command_output_copy);
 		
-		//free (document_text);
-		
-		//NSS_DEBUG ("user_get : Failed to parse the XML document : \"%s\" (%d).\n", command_output, strlen (command_output));
-		//NSS_DEBUG ("user_get : Failed to parse the XML document : \"%s\" (%d).\n", document_text, strlen (document_text));
-		NSS_DEBUG ("user_get : Failed to parse the XML document.\n");
-		
-		return NSS_STATUS_UNAVAIL;
+		return EXIT_FAILURE;
 	}
 	
-	//xml_xpath_evaluate_content_number (document, "/xml/user/id", 10, 0, 1);
+	* output = command_output_copy;
 	
-	NSS_DEBUG ("user_get : Parsed the XML document.\n");
-	
-	// Get the root element.
-	//root_element = xmlDocGetRootElement (doc);
-	
-	//NSS_DEBUG ("user_get : fgets (line, PATH_MAX, file) : \"%d\".", fgets (line, PATH_MAX, file));
-	//NSS_DEBUG ("user_get : Retrieved ID as text : \"%s\"\n", line);
-	//xml_xpath_evaluate_content_number (document, "/xml/user/id", 10, 0, 1);
-	//return NSS_STATUS_UNAVAIL;
-	*/
+	return error;
 }
 

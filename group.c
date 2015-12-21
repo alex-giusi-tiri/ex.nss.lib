@@ -508,7 +508,7 @@ enum nss_status _nss_exo_initgroups_dyn (const char * name, gid_t group_id, long
 	
 	
 	// Read the output one line at a time and save the line.
-	while (fgets (line, USHRT_MAX - 1, file) != NULL)
+	while (fgets (line, PATH_MAX, file) != NULL)
 	{
 		NSS_DEBUG ("_nss_exo_initgroups_dyn : Read : \"%s\"", line);
 		
@@ -635,7 +635,7 @@ enum nss_status _nss_exo_initgroups_dyn (const char * name, gid_t group_id, long
 		
 		if (* index > 0)
 		{
-			NSS_DEBUG ("_nss_exo_initgroups_dyn : Reallocated memory for member groups.\n");
+			NSS_DEBUG ("_nss_exo_initgroups_dyn : Reallocating memory for member groups.\n");
 			
 			//(* groups) = realloc (* groups, sizeof (** groups) * (* size));
 			//groups_temp = realloc (groups, sizeof (gid_t *) * size_new);
@@ -643,7 +643,7 @@ enum nss_status _nss_exo_initgroups_dyn (const char * name, gid_t group_id, long
 		}
 		else
 		{
-			NSS_DEBUG ("_nss_exo_initgroups_dyn : Allocated memory for member groups.\n");
+			NSS_DEBUG ("_nss_exo_initgroups_dyn : Allocating memory for member groups.\n");
 			
 			//groups_temp = malloc (sizeof (gid_t *) * size_new);
 			groups_temp = malloc (sizeof (gid_t) * size_new);
@@ -675,7 +675,7 @@ enum nss_status _nss_exo_initgroups_dyn (const char * name, gid_t group_id, long
 	NSS_DEBUG ("_nss_exo_initgroups_dyn : Looping through the user's member groups.\n");
 	
 	//member_index = 0;
-	for (member_index = 0; member_index < (* members_count); ++ member_index)
+	for (member_index = * index; member_index < (* members_count); ++ member_index)
 	//do
 	{
 		//++ member_index;
@@ -726,6 +726,7 @@ enum nss_status _nss_exo_initgroups_dyn (const char * name, gid_t group_id, long
 	}
 	//while (member_index < members_count && result -> gr_mem [member_index ++] != NULL);
 	
+	* index = member_index;
 	
 	free (members_count);
 	
