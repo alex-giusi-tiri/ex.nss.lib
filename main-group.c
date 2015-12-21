@@ -2,7 +2,7 @@
 
 #include "group.c"
 //#include <stdlib.h>
-//#include <linux/limits.h>
+#include <linux/limits.h>
 
 int main (int argc, char * argv [])
 {
@@ -29,6 +29,9 @@ int main (int argc, char * argv [])
 	size = 0;
 	index = 0;
 	_nss_exo_initgroups_dyn ("user_name", 0, & index, & size, groups, 0, & error_groups);
+	
+	//printf ("USHRT_MAX == %u\n", USHRT_MAX);
+	//printf ("SSIZE_MAX == %u\n", SSIZE_MAX);
 	
 	//printf ("Error: %i\n.", * error);
 	
@@ -60,7 +63,7 @@ int main (int argc, char * argv [])
 	if (error_groups == 0)
 	{
 		printf ("Groups\n");
-		//printf ("\tGroup : Size = [%i]\n\n", size);
+		printf ("\tGroup : Size = [%i]\n\n", size);
 		
 		for (unsigned long int i = 0; i + 1 < size; ++ i)
 		{
