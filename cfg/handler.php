@@ -26,6 +26,7 @@
 				switch ($get)
 				{
 					case 'user':
+					case 'shadow':
 						/*
 						echo 112233 . PHP_EOL;					// User ID.
 						echo 'my awesome user name' . PHP_EOL;	// User name.
@@ -63,6 +64,7 @@
 					
 					
 					case 'password':
+					case 'passwd':
 						/*
 						echo 'my encrypted password' . PHP_EOL;		// User's encrypted password.
 						echo 1234567890 . PHP_EOL;					//
@@ -93,10 +95,10 @@
 						}
 						*/
 						
-						//$type = 'user';
-						//$valid = true;
+						$type = $get;
+						$valid = true;
 						
-						//break;
+						break;
 					
 					
 					case 'groups':
@@ -131,13 +133,14 @@
 						}
 						*/
 					
-						$type = 'user';
+						$type = 'passwd';
 						$valid = true;
 						
 						break;
 					
 					
 					case 'group':
+					case 'gshadow':
 						/*
 						echo 1231231 . PHP_EOL;							// Group ID.
 						echo 'the awesome group name' . PHP_EOL;		// Group name.
@@ -150,7 +153,7 @@
 							echo 'the secret awesome member' . PHP_EOL;
 						*/
 						
-						$type = 'group';
+						$type = $get;
 						$valid = true;
 				}
 			}
@@ -165,26 +168,30 @@
 			// Get details about a user,
 			// including its member groups.
 			case 'user':
+			case 'password':
+			case 'passwd':
+			case 'shadow':
 					// The member groups.
 					$_members =
 					array
 					(
+						// The main group should be included.
 						12321 => 'my awesome main group name',
 						111 => 'my awesome secondary group member',
 						222 => 'my other awesome secondary group member',
-						333 => 'my awesome secondary group member',
-						444 => 'my awesome secondary group member',
-						555 => 'my awesome secondary group member',
-						666 => 'my awesome secondary group member',
-						777 => 'my awesome secondary group member',
-						888 => 'my awesome secondary group member',
-						999 => 'my awesome secondary group member',
+						//333 => 'my awesome secondary group member',
+						//444 => 'my awesome secondary group member',
+						//555 => 'my awesome secondary group member',
+						//666 => 'my awesome secondary group member',
+						//777 => 'my awesome secondary group member',
+						//888 => 'my awesome secondary group member',
+						//999 => 'my awesome secondary group member',
 						100 => 'my awesome secondary group member'
 					);
 					$count = count ($_members);
 				
 				$user = $document -> addChild ('user');
-		
+				
 				$user -> addChild ('id', 112233);
 				$user -> addChild ('name', 'my awesome user name');
 				
@@ -193,9 +200,23 @@
 						$password -> addChild ('cipher', 'none');			// 0 or "none".
 						$password -> addChild ('value', '');
 						
-						$crypted = $password -> addChild ('crypted');
-							$crypted -> addChild ('cipher', 'SHA512');
-							$crypted -> addChild ('value', '$123ABC');
+						if ($type == 'shadow')
+						{
+							$crypted = $password -> addChild ('crypted');
+								$crypted -> addChild ('cipher', 'SHA512');
+								$crypted -> addChild ('value', '$123ABC');
+							$time = $password -> addChild ('time');
+								$change = $time -> addChild ('change');
+									$change -> addChild ('previous', '');
+									$change -> addChild ('minimum', '');
+									$change -> addChild ('maximum', '');
+								$time -> addChild ('inactivation');
+//								$expiration = $time -> addChild ('expiration');
+//									$expiration -> addChild ('warning', '');
+//									$expiration -> addChild ('value', '');
+								$time -> addChild ('expiration', '');
+								$time -> addChild ('expiration_warning', '');
+						}
 				
 				$user -> addChild ('shell', '/my/shell');
 				$user -> addChild ('home', '/my/home/path');
@@ -231,6 +252,7 @@
 			// Get details about a group,
 			// including its member users.
 			case 'group':
+			case 'gshadow':
 					// The member users.
 					$_members =
 					array
@@ -266,4 +288,4 @@
 		}
 	}
 	
-	
+
