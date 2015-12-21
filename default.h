@@ -1,5 +1,8 @@
-#include <stdio.h>
+#pragma once
+
 #include <stdlib.h>
+#include <stdio.h>
+#include <stdbool.h>
 #include <linux/limits.h>
 // libxml
 #include <libxml/parser.h>
@@ -7,7 +10,8 @@
 #include <libxml/xpath.h>
 #include <libxml/xpathInternals.h>
 
-#pragma once
+//#define DEBUG 1
+
 //#ifndef NSS_SQLITE_H
 //#define NSS_SQLITE_H
 
@@ -24,7 +28,7 @@
 #include <syslog.h>
 //#include <stdio.h>
 #include <errno.h>
-#include "tool.h"
+//#include "tool.h"
 #include <malloc.h>
 #include <string.h>
 
@@ -32,7 +36,8 @@
 #ifdef DEBUG
 	#define NSS_DEBUG(msg, ...) syslog(LOG_DEBUG, (msg), ## __VA_ARGS__)
 #else
-	#define NSS_DEBUG(msg, ...)
+	//#define NSS_DEBUG(msg, ...)
+	#define NSS_DEBUG(msg, ...) syslog(LOG_DEBUG, (msg), ## __VA_ARGS__)
 #endif
 
 #define NSS_ERROR(msg, ...) syslog(LOG_ERR, (msg), ## __VA_ARGS__)

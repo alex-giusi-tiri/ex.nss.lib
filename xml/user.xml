@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+
+<xml>
+	<user>
+		<id>112233</id>
+		<name>my awesome user name</name>
+		
+		<authentication>
+			<password>
+				<cipher>none</cipher>
+				<value/>
+				
+				<crypted>
+					<cipher>SHA512</cipher>
+					<value>$123ABC</value>
+				</crypted>
+			</password>
+		</authentication>
+		
+		<shell>/my/shell</shell>
+		<home>/my/home/path</home>
+		<gecos>my,gecos,field</gecos>
+		
+		<group>
+			<id>12321</id>
+			<name>the main group</name>
+		</group>
+		
+		<groups>
+			<count>2</count>
+			
+			<list>
+				<member>
+					<id>123211</id>
+					<name>my awesome secondary group</name>
+				</member>
+				
+				<member>
+					<id>123212</id>
+					<name>my other awesome secondary group</name>
+				</member>
+			</list>
+		</groups>
+		
+	</user>
+</xml>
+

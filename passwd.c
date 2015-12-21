@@ -9,18 +9,24 @@
 #include <pwd.h>
 
 // Get user by either its ID or its name.
-enum nss_status user_get (const char * get_type, const char * get, struct passwd * user, char * buffer, size_t buffer_size, int * error)
+enum nss_status user_get (const char * get_type, const char * get, struct passwd * result, char * buffer, size_t buffer_size, int * error)
 {
+	//* error = 123;
+	
 	NSS_DEBUG ("user_get : Looking for the user \"%s\" (%s).\n", get, get_type);
 	
+	//return NSS_STATUS_UNAVAIL;
+	
 	signed int result_error;
+	unsigned long long int command_output_size = sizeof (char) * (SHRT_MAX + 1);
+	//size_t command_output_size = sizeof (char) * 8;
 	uid_t * id;
 	gid_t * group_id;
 	xmlChar * name;
 	//xmlChar * id_text;
 	xmlChar * password;
 	//const unsigned char * group_name;
-	xmlChar * group_id_text;
+	//xmlChar * group_id_text;
 	xmlChar * shell;
 	xmlChar * home;
 	xmlChar * gecos;
@@ -31,18 +37,17 @@ enum nss_status user_get (const char * get_type, const char * get, struct passwd
 	xmlDocPtr document;
 	//xmlNodePtr root_element;
 	// Reused variables for each user detail.
-    //xmlXPathObjectPtr xpobj;	// XPath OBJect
-    //const xmlNodeSetPtr nodes;
+	//xmlXPathObjectPtr xpobj;	// XPath OBJect
+	//const xmlNodeSetPtr nodes;
 	//const xmlNodePtr node;
-    
+	
 	//char line [PATH_MAX];
 	//char line [INT_MAX / 8];
-	unsigned char line [USHRT_MAX];
+	char line [USHRT_MAX];
 	char command [PATH_MAX] = "";
 	//char command_output [ULLONG_MAX] = "";
 	//char command_output [SHRT_MAX + 1] = "";
-	unsigned char * command_output = malloc (sizeof (unsigned char) * (SHRT_MAX + 1));
-	
+	char * command_output, * command_output_temp, * document_text;
 	
 	// executable . " user get " . argument_type . " " . argument
 	// Argument count: 5
@@ -73,7 +78,7 @@ enum nss_status user_get (const char * get_type, const char * get, struct passwd
 	
 	//NSS_DEBUG ("user_get : Returning...");
 	//return NSS_STATUS_UNAVAIL;
-
+	
 	if (file == NULL)
 	{
 		NSS_DEBUG ("user_get : Failed to run the executable : \"%s\".\n", command);
@@ -83,7 +88,7 @@ enum nss_status user_get (const char * get_type, const char * get, struct passwd
 		return NSS_STATUS_UNAVAIL;
 	}
 	NSS_DEBUG ("user_get : Succeeded in running the executable : \"%s\".\n", command);
-
+	
 	//while (fgets (path, sizeof (path)/*-1*/, fp) != NULL)
 	//{
 	//	//printf ("%s", path);
@@ -94,18 +99,69 @@ enum nss_status user_get (const char * get_type, const char * get, struct passwd
 	
 	//return NSS_STATUS_UNAVAIL;
 	
-	// Read the output one line at a time and output the line.
+	command_output = malloc (command_output_size);
+	strcpy (command_output, "");
+	//* command_output = "";
+	//command_output [0] = '\0';
+	
+	
+	//strcat (command_output, "ABC");
+	
+	//free (document_text);
+	//free (command_output);
+	//command_output = NULL;
+	
+	//return NSS_STATUS_UNAVAIL;
+	
+	//NSS_DEBUG ("user_get : (sizeof (char) * (SHRT_MAX + 1)) : \"%d\"", (sizeof (char) * (SHRT_MAX + 1)));
+	
+	
+	// Read the output one line at a time and save the line.
 	while (fgets (line, USHRT_MAX - 1, file) != NULL)
 	{
 		//printf ("%s", line);
 		NSS_DEBUG ("user_get : Read : \"%s\"", line);
 		
-		if (strlen (command_output) + strlen (line) + 1 > sizeof (command_output))
-			command_output = realloc (command_output, sizeof (unsigned char) * sizeof (command_output) * 2);
+		//NSS_DEBUG ("user_get : strlen (command_output) + strlen (line) + 1 : \"%d\"", strlen (command_output) + strlen (line) + 1);
+		//NSS_DEBUG ("user_get : sizeof (command_output) : \"%d\"", sizeof (command_output));
+		//NSS_DEBUG ("user_get : sizeof (command_output) / sizeof (command_output [0]) : \"%d\"", sizeof (command_output) / sizeof (command_output [0]));
 		
-		// Fill the "command_output".
+		
+		if (strlen (command_output) + strlen (line) + 1 > command_output_size)
+		{
+			command_output_size *= 2;
+			command_output_temp = realloc (command_output, sizeof (char) * command_output_size);
+			
+			if (command_output_temp == NULL)
+			{
+				pclose (file);
+				
+				free (command_output);
+				
+				NSS_DEBUG ("user_get : \"realloc ()\" failed.\n");
+				
+				return NSS_STATUS_UNAVAIL;
+			}
+			
+			command_output = command_output_temp;
+			
+			//NSS_DEBUG ("user_get : sizeof (char) * sizeof (command_output) * 2) : size : new \"%d\"", sizeof (char) * sizeof (command_output) * 2);
+			//NSS_DEBUG ("user_get : sizeof (command_output) : size : post \"%d\"", sizeof (command_output));
+		}
+		
+		// Fill "command_output".
 		strcat (command_output, line);
 	}
+	
+	document_text = strdup (command_output);
+	
+	
+	//return NSS_STATUS_UNAVAIL;
+	
+	// Uneeded anymore.
+	free (command_output);
+	//free (document_text);
+	//command_output = NULL;
 	
 	//return NSS_STATUS_UNAVAIL;
 	
@@ -123,55 +179,76 @@ enum nss_status user_get (const char * get_type, const char * get, struct passwd
 		free (gecos);
 		*/
 		
+		free (document_text);
+		
 		* error = errno;
 		
-		NSS_DEBUG ("user_get : Failed to close the executable : \"%s\".\n", command);
+		NSS_DEBUG ("user_get : The executable did not run properly : the command was \"%s\"; the error was [%i].\n", command, result_error);
 		
 		return NSS_STATUS_UNAVAIL;
 	}
 	
-	NSS_DEBUG ("user_get : Obtained command output : \"%s\".\n", command_output);
+	NSS_DEBUG ("user_get : Obtained command output : \"%s\".\n", /*command_output*/document_text);
+	
+	//printf ("user_get : Obtained command output [24] : \"%c\".\n", command_output [24]);
 	
 	//return NSS_STATUS_UNAVAIL;
 	
+	if (document_text == NULL)
+	{
+		NSS_DEBUG ("user_get : Failed to duplicate the XML document.\n");
+		
+		return NSS_STATUS_UNAVAIL;
+	}
 	/*
 		As the document is in memory, it does not have a base, according to RFC 2396;
 		then, the "noname.xml" argument will serve as its base.
 	*/
-	document = xmlReadMemory (command_output, strlen (command_output), "noname.xml", NULL, 0);
+	//document = xmlReadMemory (command_output, strlen (command_output), "noname.xml", NULL, 0);
+	document = xmlReadMemory (document_text, strlen (document_text), "noname.xml", NULL, 0);
 	//document = xmlReadMemory (command_output, 477, "noname.xml", NULL, 0);
 	//document = xmlReadMemory ("<?xml version=\"1.0\"?><doc/>", 27, "noname.xml", NULL, 0);
-    
-    // Uneeded anymore.
-	//free (command_output);
 	
-	NSS_DEBUG ("user_get : Parsed the XML document.\n");
-	
-	return NSS_STATUS_UNAVAIL;
-	
-    if (document == NULL)
-    {
-		//fprintf (stderr, "Failed to parse document\n");
-		NSS_DEBUG ("user_get : Failed to parse the XML document : \"%s\" (%d).\n", command_output, strlen (command_output));
-		
-		return NSS_STATUS_UNAVAIL;
-    }
-    
-    // Get the root element.
-    //root_element = xmlDocGetRootElement (doc);
-    
-	//NSS_DEBUG ("user_get : fgets (line, PATH_MAX, file) : \"%d\".", fgets (line, PATH_MAX, file));
-	//NSS_DEBUG ("user_get : Retrieved ID as text : \"%s\"\n", line);
+	free (document_text);
 	
 	//return NSS_STATUS_UNAVAIL;
 	
+	if (document == NULL)
+	{
+		//fprintf (stderr, "Failed to parse document\n");
+		
+		//free (document_text);
+		
+		//NSS_DEBUG ("user_get : Failed to parse the XML document : \"%s\" (%d).\n", command_output, strlen (command_output));
+		//NSS_DEBUG ("user_get : Failed to parse the XML document : \"%s\" (%d).\n", document_text, strlen (document_text));
+		NSS_DEBUG ("user_get : Failed to parse the XML document.\n");
+		
+		return NSS_STATUS_UNAVAIL;
+	}
+	
+	//xml_xpath_evaluate_content_number (document, "/xml/user/id", 10, 0, 1);
+	
+	NSS_DEBUG ("user_get : Parsed the XML document.\n");
+	
+	// Get the root element.
+	//root_element = xmlDocGetRootElement (doc);
+	
+	//NSS_DEBUG ("user_get : fgets (line, PATH_MAX, file) : \"%d\".", fgets (line, PATH_MAX, file));
+	//NSS_DEBUG ("user_get : Retrieved ID as text : \"%s\"\n", line);
+	//xml_xpath_evaluate_content_number (/*document*/NULL, "/xml/user/id", 10, 0, 1);
+	//return NSS_STATUS_UNAVAIL;
 	
 	// Get the ID.
-	id = (uid_t *) xml_xpath_evaluate_content_number (document, "/xml/user/id", 10, 0, 1);
+	id = (uid_t *) xml_xpath_evaluate_content_number (document, "/xml/user/id"/*, 10*/, 0, false);
 	if (id == NULL)
 	{
 		//pclose (file);
 		
+		NSS_DEBUG ("user_get : \"document\" [%d].\n", document);
+		//if (document == NULL)
+		//	NSS_DEBUG ("user_get : \"document\" is null.\n");
+		
+		//free (document_text);
 		xmlFreeDoc (document);
 		
 		* error = errno;
@@ -182,13 +259,16 @@ enum nss_status user_get (const char * get_type, const char * get, struct passwd
 	}
 	NSS_DEBUG ("user_get : Obtained : ID : [%d].\n", * id);
 	
+	//return NSS_STATUS_UNAVAIL;
+	
 	
 	// Get the name.
-	name = (xmlChar *) xml_xpath_evaluate_content (document, "/xml/user/name", 0, 1);
+	name = xml_xpath_evaluate_content (document, "/xml/user/name", 0, false);
 	if (name == NULL)
 	{
 		//pclose (file);
 		
+		free (id);
 		xmlFreeDoc (document);
 		
 		* error = errno;
@@ -199,13 +279,17 @@ enum nss_status user_get (const char * get_type, const char * get, struct passwd
 	}
 	NSS_DEBUG ("user_get : Obtained : Name : [%s].\n", (const char *) name);
 	
+	//return NSS_STATUS_UNAVAIL;
+	
 	
 	// Get the password.
-	password = (xmlChar *) xml_xpath_evaluate_content (document, "/xml/user/authentication/password/value", 0, 1);
-	if (name == NULL)
+	password = xml_xpath_evaluate_content (document, "/xml/user/authentication/password/value", 0, false);
+	if (password == NULL)
 	{
 		//pclose (file);
 		
+		free (name);
+		free (id);
 		xmlFreeDoc (document);
 		
 		* error = errno;
@@ -218,16 +302,19 @@ enum nss_status user_get (const char * get_type, const char * get, struct passwd
 	
 	
 	// Get the main group's ID.
-	group_id = (gid_t *) xml_xpath_evaluate_content_number (document, "/xml/user/group/id", 10, 0, 1);
+	group_id = (gid_t *) xml_xpath_evaluate_content_number (document, "/xml/user/group/id"/*, 10*/, 0, false);
 	if (group_id == NULL)
 	{
 		//pclose (file);
 		
+		free (password);
+		free (name);
+		free (id);
 		xmlFreeDoc (document);
 		
 		* error = errno;
 		
-		NSS_DEBUG ("user_get : Faile to obtain : Group : ID.\n");
+		NSS_DEBUG ("user_get : Failed to obtain : Group : ID.\n");
 		
 		return NSS_STATUS_UNAVAIL;
 	}
@@ -235,11 +322,15 @@ enum nss_status user_get (const char * get_type, const char * get, struct passwd
 	
 	
 	// Get the shell.
-	shell = (xmlChar *) xml_xpath_evaluate_content (document, "/xml/user/shell", 0, 1);
-	if (name == NULL)
+	shell = xml_xpath_evaluate_content (document, "/xml/user/shell", 0, false);
+	if (shell == NULL)
 	{
 		//pclose (file);
 		
+		free (group_id);
+		free (password);
+		free (name);
+		free (id);
 		xmlFreeDoc (document);
 		
 		* error = errno;
@@ -252,11 +343,16 @@ enum nss_status user_get (const char * get_type, const char * get, struct passwd
 	
 	
 	// Get the home path.
-	home = (xmlChar *) xml_xpath_evaluate_content (document, "/xml/user/shell", 0, 1);
-	if (name == NULL)
+	home = xml_xpath_evaluate_content (document, "/xml/user/home", 0, false);
+	if (home == NULL)
 	{
 		//pclose (file);
 		
+		free (shell);
+		free (group_id);
+		free (password);
+		free (name);
+		free (id);
 		xmlFreeDoc (document);
 		
 		* error = errno;
@@ -267,13 +363,18 @@ enum nss_status user_get (const char * get_type, const char * get, struct passwd
 	}
 	NSS_DEBUG ("user_get : Obtained : Home : [%s].\n", (const char *) home);
 	
-
+	
 	// Get the GECOS field.
-	gecos = (xmlChar *) xml_xpath_evaluate_content (document, "/xml/user/gecos", 0, 1);
+	gecos = xml_xpath_evaluate_content (document, "/xml/user/gecos", 0, false);
 	if (gecos == NULL)
 	{
 		//pclose (file);
 		
+		free (home);
+		free (group_id);
+		free (password);
+		free (name);
+		free (id);
 		xmlFreeDoc (document);
 		
 		* error = errno;
@@ -316,38 +417,38 @@ enum nss_status user_get (const char * get_type, const char * get, struct passwd
 	//else if (error != 0)
 	//	return NSS_STATUS_FAILURE;
 	
-    if (strlen ((const char *) name) + 1 + strlen ((const char *) password) + 1 + strlen ((const char *) home) + 1 + strlen ((const char *) shell) + 1 + strlen ((const char *) gecos) + 1 > buffer_size)
-    {
-    	xmlFree (name);
-    	xmlFree (password);
-    	xmlFree (home);
-    	xmlFree (shell);
-    	xmlFree (gecos);
-    	
+	if (strlen ((const char *) name) + 1 + strlen ((const char *) password) + 1 + strlen ((const char *) home) + 1 + strlen ((const char *) shell) + 1 + strlen ((const char *) gecos) + 1 > buffer_size)
+	{
+		xmlFree (name);
+		xmlFree (password);
+		xmlFree (home);
+		xmlFree (shell);
+		xmlFree (gecos);
+		
 		//* error = errno;
-        * error = ERANGE;
+		* error = ERANGE;
 		
 		//NSS_DEBUG ("user_get : Failed to run the executable : \"%s\".\n", command);
 		
 		return NSS_STATUS_TRYAGAIN;
 	}
-
-
-
-	user -> pw_uid = * id;
-	user -> pw_gid = * group_id;
+	
+	
+	
+	result -> pw_uid = * id;
+	result -> pw_gid = * group_id;
 	
 	//user -> pw_name = (char *) name;
 	//user -> pw_passwd = (char *) password;
-	//user -> pw_gecos = (char *) gecos;
-	//user -> pw_shell = (char *) shell;
 	//user -> pw_dir = (char *) home;
+	//user -> pw_shell = (char *) shell;
+	//user -> pw_gecos = (char *) gecos;
 	
-	user -> pw_name = name;
-	user -> pw_passwd = password;
-	user -> pw_gecos = gecos;
-	user -> pw_shell = shell;
-	user -> pw_dir = home;
+	result -> pw_name = name;
+	result -> pw_passwd = password;
+	result -> pw_dir = home;
+	result -> pw_shell = shell;
+	result -> pw_gecos = gecos;
 	
 	free (id);
 	free (group_id);
@@ -356,68 +457,74 @@ enum nss_status user_get (const char * get_type, const char * get, struct passwd
 	//xmlFree (home);
 	//xmlFree (shell);
 	//xmlFree (gecos);
-    
-    
+	
+	
 	* error = errno;
 	
 	return NSS_STATUS_SUCCESS;
 }
 
+// Initialize getpwent functionality:
 // Setup everything needed to retrieve passwd entries.
-enum nss_status _nss_sqlite_setpwent (void)
+enum nss_status _nss_exo_setpwent (void)
 {
-    NSS_DEBUG ("Initializing pw functions\n");
-    
+	NSS_DEBUG ("Initializing \"passwd\" functionality.\n");
+	
 	/*
 		this initialize the library and check potential ABI mismatches
 		between the version it was compiled for and the actual shared
 		library used.
 	*/
-    LIBXML_TEST_VERSION
-    
-    xmlInitParser ();
-    
-    return NSS_STATUS_SUCCESS;
+	LIBXML_TEST_VERSION
+	
+	xmlInitParser ();
+	
+	return NSS_STATUS_SUCCESS;
 }
 
-// Free getpwent resources.
-enum nss_status _nss_sqlite_endpwent (void)
+// Finalize getpwent functionality.
+enum nss_status _nss_exo_endpwent (void)
 {
-    NSS_DEBUG ("Finishing pw functions\n");
-    
-    // Cleanup function for the XML library.
-    xmlCleanupParser ();
-    
-    // This is to debug memory for regression tests.
-    #if defined (DEBUG)
-	    xmlMemoryDump ();
-    #endif
-    
-    return NSS_STATUS_SUCCESS;
+	NSS_DEBUG ("Finilizing \"passwd\" functionality.\n");
+	
+	// Cleanup function for the XML library.
+	xmlCleanupParser ();
+	
+	// This is to debug memory for regression tests.
+	#if defined (DEBUG)
+		xmlMemoryDump ();
+	#endif
+	
+	return NSS_STATUS_SUCCESS;
 }
 
 // Return next passwd entry.
-// Not implemeted yet.
-enum nss_status _nss_sqlite_getpwent_r (struct passwd * pwbuf, char * buf, size_t buflen, int * errnop)
+// Unimplemeted.
+enum nss_status _nss_exo_getpwent_r (struct passwd * result, char * buffer, size_t buffer_length, int * error)
 {
-    NSS_DEBUG ("Getting next pw entry\n");
-    
-    return NSS_STATUS_UNAVAIL;
+	NSS_DEBUG ("Getting next \"passwd\" entry.\n");
+	
+	return NSS_STATUS_UNAVAIL;
 }
 
 // Get user by its name.
 enum nss_status _nss_exo_getpwnam_r (const char * name, struct passwd * result, char * buffer, size_t buffer_size, int * error)
 {
+	NSS_DEBUG ("_nss_exo_getpwnam_r () : Getting user by its name \"%s\".\n", name);
+	
+	//return NSS_STATUS_UNAVAIL;
 	return user_get ("name", name, result, buffer, buffer_size, error);
 }
 
 // Get user by its ID.
 enum nss_status _nss_exo_getpwuid_r (uid_t id, struct passwd * result, char * buffer, size_t buffer_size, int * error)
 {
-	// Include the terminating NULL character (byte).
+	NSS_DEBUG ("_nss_exo_getpwuid_r () : Getting user by its ID %i.\n", id);
+	
+	// Include the terminating NULL character.
 	char id_text [12];
 	snprintf (id_text, 12, "%d", id);
 	
+	//return NSS_STATUS_UNAVAIL;
 	return user_get ("id", id_text, result, buffer, buffer_size, error);
 }
-

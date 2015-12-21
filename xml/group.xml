@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+
+<xml>
+	<group>
+		<id>112233</id>
+		<name>my awesome group name</name>
+		
+		<authentication>
+			<password>
+				<cipher>none</cipher>
+				<value/>
+				
+				<crypted>
+					<cipher>SHA512</cipher>
+					<value>$123ABC</value>
+				</crypted>
+			</password>
+		</authentication>
+		
+		<users>
+			<count>2</count>
+			
+			<list>
+				<member>
+					<id>1</id>
+					<name>the awesome user</name>
+				</member>
+				
+				<member>
+					<id>2</id>
+					<name>the other awesome user</name>
+				</member>
+			</list>
+		</users>
+	</group>
+</xml>
+

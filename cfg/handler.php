@@ -122,9 +122,9 @@
 									$members -> addChild ($grp_id, $grp_name);
 								}
 							
-								//echo 2 . PHP_EOL;
-								//echo 'my awesome group' . PHP_EOL;
-								//echo 'my other awesome group' . PHP_EOL;
+								//echo 2 . PHP_EOL;										// Member groups count.
+								//echo 'my awesome secondary group' . PHP_EOL;			// List of members.
+								//echo 'my other awesome secondary group' . PHP_EOL;
 							
 								break;
 							case 'set':
@@ -143,7 +143,7 @@
 						echo 'the awesome group name' . PHP_EOL;		// Group name.
 						echo 'the awesome group password' . PHP_EOL;	// Group password.
 						echo 3 . PHP_EOL;								// Count of user members.
-							// List of user members.
+																		// List of user members.
 						
 							echo 'the awesome member' . PHP_EOL;
 							echo 'the other awesome member' . PHP_EOL;
@@ -169,8 +169,17 @@
 					$_members =
 					array
 					(
-						1 => 'my awesome group',
-						2 => 'my other awesome group'
+						12321 => 'my awesome main group name',
+						111 => 'my awesome secondary group member',
+						222 => 'my other awesome secondary group member',
+						333 => 'my awesome secondary group member',
+						444 => 'my awesome secondary group member',
+						555 => 'my awesome secondary group member',
+						666 => 'my awesome secondary group member',
+						777 => 'my awesome secondary group member',
+						888 => 'my awesome secondary group member',
+						999 => 'my awesome secondary group member',
+						100 => 'my awesome secondary group member'
 					);
 					$count = count ($_members);
 				
@@ -183,10 +192,14 @@
 					$password = $authentication -> addChild ('password');
 						$password -> addChild ('cipher', 'none');			// 0 or "none".
 						$password -> addChild ('value', '');
+						
+						$crypted = $password -> addChild ('crypted');
+							$crypted -> addChild ('cipher', 'SHA512');
+							$crypted -> addChild ('value', '$123ABC');
 				
 				$user -> addChild ('shell', '/my/shell');
 				$user -> addChild ('home', '/my/home/path');
-				$user -> addChild ('gecos', 'my:gecos:field');
+				$user -> addChild ('gecos', 'my,gecos,field');
 				
 					// The main group.
 					$group = $user -> addChild ('group');	// Main or 0.
@@ -222,8 +235,8 @@
 					$_members =
 					array
 					(
-						1 => 'the awesome user',
-						2 => 'the other awesome user'
+						11 => 'the awesome user member',
+						22 => 'the other awesome user member'
 					);
 					$count = count ($_members);
 				

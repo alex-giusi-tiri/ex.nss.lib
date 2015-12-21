@@ -17,24 +17,25 @@
 enum nss_status _nss_exo_getspnam_r (const char * name, struct spwd * result, char * buffer, size_t buffer_size, int * error)
 {
 	//const unsigned char * name;
-	char * password;
-	char * change_text;
-	char * minimum_text;
-	char * maximum_text;
-	char * warning_text;
-	char * inactivity_text;
-	char * expiration_text;
+	//char * password;
+	//char * change_text;
+	//char * minimum_text;
+	//char * maximum_text;
+	//char * warning_text;
+	//char * inactivity_text;
+	//char * expiration_text;
 	//const unsigned char * flag_text;
-	signed long int change;
-	signed long int minimum;
-	signed long int maximum;
-	signed long int warning;
-	signed long int inactivity;
-	signed long int expiration;
-	//unsigned long int flag;
+	signed long int * change;
+	signed long int * minimum;
+	signed long int * maximum;
+	signed long int * warning;
+	signed long int * inactivity;
+	signed long int * expiration;
+	//unsigned long int * flag;
+	char * document_text;
 	
-	FILE * file;
-	char line [PATH_MAX];
+	//FILE * file;
+	//char line [PATH_MAX];
 	char command [PATH_MAX] = "";
 	
 	
@@ -43,21 +44,16 @@ enum nss_status _nss_exo_getspnam_r (const char * name, struct spwd * result, ch
 	strcat (command, executable);
 	strcat (command, " password get name ");
 	strcat (command, name);
-	
+	/*
 	// Open the command for reading.
-	file = popen (command, "r");
-
-	if (file == NULL)
+	result_error = system_execute (command, document_text);
+	
+	if (result_error != 0)
 	{
 		NSS_DEBUG ("getspnam_r : Failed to run the executable.\n");
 		
 		return NSS_STATUS_UNAVAIL;
 	}
-	
-	//while (fgets (path, sizeof (path)/*-1*/, fp) != NULL)
-	//{
-	//	//printf ("%s", path);
-	//}
 	
 	/*
 	// Get the name.
@@ -70,19 +66,25 @@ enum nss_status _nss_exo_getspnam_r (const char * name, struct spwd * result, ch
 		return NSS_STATUS_UNAVAIL;
 	}
 	name = strdup (line);
-	*/
+	* /
 	
 	// Get the password.
-	if (fgets (line, PATH_MAX, file) == NULL)
+	password = xml_xpath_evaluate_content (document, "/xml/user/authentication/password/crypted/value", 0, false);
+	if (password == NULL)
 	{
-		//free (name);
+		//pclose (file);
 		
-		NSS_DEBUG ("getspnam_r : Failed to parse the executable's output : Password\n");
+		free (name);
+		free (id);
+		xmlFreeDoc (document);
+		
+		* error = errno;
+		
+		NSS_DEBUG ("user_get : Failed to obtain : Password.\n");
 		
 		return NSS_STATUS_UNAVAIL;
 	}
-	password = strdup (line);
-	password [strcspn (password, "\r\n")] = NULL;
+	NSS_DEBUG ("user_get : Obtained : Password : [%s].\n", (const char *) password);
 	
 	
 	// Get the time when the password was last changed.
@@ -338,7 +340,7 @@ enum nss_status _nss_exo_getspnam_r (const char * name, struct spwd * result, ch
 	
 		return NSS_STATUS_UNAVAIL;
 	}
-	*/
+	* /
 	
 	//name = sqlite3_column_text(pSt, 0);
 	//gid = sqlite3_column_int(pSt, 1);
@@ -382,6 +384,7 @@ enum nss_status _nss_exo_getspnam_r (const char * name, struct spwd * result, ch
 	//	return NSS_STATUS_FAILURE;
 	
 	return NSS_STATUS_SUCCESS;
+	*/
 }
 
 

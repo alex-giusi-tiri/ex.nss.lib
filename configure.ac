@@ -23,6 +23,7 @@ AC_PREFIX_DEFAULT([])
 #    AC_DEFINE([NSS_SQLITE_SHADOW_DB], ["/var/db/shadow.sqlite"], [Shadow database]))
 
 
+CFLAGS="$CLAGS $(xml2-config --cflags) $(xml2-config --libs)"
 
 AC_ARG_ENABLE(debug, 
     AC_HELP_STRING([--enable-debug],
@@ -41,7 +42,7 @@ AC_PROG_LIBTOOL
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([errno.h grp.h malloc.h nss.h pthread.h pwd.h shadow.h string.h syslog.h unistd.h],
+AC_CHECK_HEADERS([libxml/parser.h libxml/tree.h libxml/xpath.h libxml/xpathInternals.h errno.h grp.h malloc.h nss.h pthread.h pwd.h shadow.h string.h syslog.h unistd.h],
     [], AC_MSG_ERROR([Missing headers]))
 
 # Checks for typedefs, structures, and compiler characteristics.
