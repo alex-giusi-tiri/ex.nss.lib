@@ -1,4 +1,4 @@
-#include "default.h"
+#include "0.h"
 #include "tool.h"
 
 #include <string.h>
@@ -414,7 +414,8 @@ const signed int execute (const char * command, char ** output)
 	if (error != 0)
 	{
 		
-		free (command_output_copy);
+		if (command_output_copy != NULL)
+			free (command_output_copy);
 		
 		//* error = errno;
 		
@@ -431,10 +432,14 @@ const signed int execute (const char * command, char ** output)
 	{
 		NSS_DEBUG ("execute : Failed to copy the output.\n");
 		
-		free (command_output_copy);
+		//free (command_output_copy);
 		
 		return EXIT_FAILURE;
 	}
+	
+	//output = malloc (sizeof (char *));
+	
+	NSS_DEBUG ("nss-exo : execute : Setting the output.\n");
 	
 	* output = command_output_copy;
 	

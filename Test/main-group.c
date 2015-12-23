@@ -1,6 +1,6 @@
 //#define DEBUG 1
 
-#include "group.c"
+#include "../Source/nss/group.c"
 //#include <stdlib.h>
 #include <linux/limits.h>
 
@@ -21,14 +21,16 @@ int main (int argc, char * argv [])
 	
 	//* error = 0;
 	error_group = 0;
-	group_get ("id", "0", & group, buffer, PATH_MAX, & error_group);
+	group_get ("name", "college", & group, buffer, PATH_MAX, & error_group);
+	
+	//printf ("strlen (NULL) == %u\n", strlen ("\0"));
 	
 	//return EXIT_FAILURE;
 	
 	error_groups = 0;
 	size = 0;
 	index = 0;
-	_nss_exo_initgroups_dyn ("user_name", 0, & index, & size, groups, 0, & error_groups);
+	_nss_exo_initgroups_dyn ("college", 0, & index, & size, groups, 0, & error_groups);
 	
 	//printf ("USHRT_MAX == %u\n", USHRT_MAX);
 	//printf ("SSIZE_MAX == %u\n", SSIZE_MAX);
@@ -47,9 +49,13 @@ int main (int argc, char * argv [])
 		printf ("Name\t\t: [%s]\n", group.gr_name);
 		printf ("Password\t: [%s]\n", group.gr_passwd);
 		// List of user members.
-		for (unsigned long int i = 0; i < 2; ++ i)
+		unsigned long int i = 0;
+		//for (unsigned long int i = 0; i < 1; ++ i)
+		while (group.gr_mem [i] != NULL)
 		{
-			printf ("\tgroup.gr_mem [%i] = [%s]\n", i, group.gr_mem [i]);
+			printf ("\tgroup.gr_mem [%i] == [%s]\n", i, group.gr_mem [i]);
+			
+			++ i;
 		}
 	}
 	else

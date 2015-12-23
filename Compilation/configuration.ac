@@ -4,8 +4,9 @@
 AC_PREREQ(2.61)
 AC_INIT([nss-exo], [1])
 AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([subdir-objects])
 AC_CONFIG_MACRO_DIRS([m4])
-AC_CONFIG_SRCDIR([tool.h])
+AC_CONFIG_SRCDIR([../Source/tool.h])
 AC_CONFIG_HEADER([config.h])
 AC_PREFIX_DEFAULT([])
 

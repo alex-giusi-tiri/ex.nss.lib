@@ -1,0 +1,48 @@
+nss-exo
+========
+
+	"nss-exo" is a library which can be used to provide authentication services using externally stored entries.
+	It has not been tested!
+	
+	Arch packages will be soon available.
+
+
+ 1. Prerequisites
+------------------
+
+	No core ones.
+
+
+ 1.1 Optional Dependencies
+---------------------------
+
+	Whatever your delegated handler requires.
+	The example handler uses PHP 5.6.16. By default, "/etc/nss/exo/handler" expects "/etc/nss/exo/handler.php" to exist.
+
+ 2. Installation
+-----------------
+
+	For example:
+		cd nss-exo/
+		./preparation.sh
+		./configure CFLAGS='-O2' [--enable-debug]
+		make
+		sudo make install
+
+	Generated libraries will be placed in /lib.
+	You can overwrite this setting by passing --libdir or --prefix to configure.
+
+
+ 3. Configuration
+------------------
+
+	There is no specific configuration for nss-exo.
+	There is some currently planned, like specifying the external delegated handler.
+
+
+ 4. More information
+---------------------
+
+Consult "https://github.com/alex-giusi-tiri/nss-exo".
+EMail: alex_giusi_tiri@yahoo.com
+IRC: AGTT@irc.freenode.net

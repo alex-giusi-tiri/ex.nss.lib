@@ -1,5 +1,5 @@
-#include "default.h"
-//#include "tool.h"
+#include "../0.h"
+//#include "../tool.h"
 
 //#include <errno.h>
 #include <grp.h>
@@ -32,7 +32,7 @@ enum nss_status _nss_exo_getspnam_r (const char * name, struct spwd * result, ch
 	long int * inactivation;
 	long int * expiration;
 	//unsigned long int * flag;
-	char ** document_text;
+	char * document_text;
 	
 	signed int result_error;
 	
@@ -46,22 +46,24 @@ enum nss_status _nss_exo_getspnam_r (const char * name, struct spwd * result, ch
 	// executable . " password get " . get_type . " " . get
 	// Argument count: 5
 	strcat (command, executable);
-	strcat (command, " shadow get name ");
+	strcat (command, " shadow get name '");
 	strcat (command, name);
+	strcat (command, "'");
 	///*
 	// Open the command for reading.
-	result_error = system_execute (command, document_text);
+	
+	result_error = execute (command, & document_text);
 	
 	if (result_error != 0)
 	{
-		NSS_DEBUG ("_nss_exo_getspnam_r : Failed to run the executable.\n");
+		NSS_DEBUG ("user_get : Failed to run the command \"%s\".\n", command);
 		
 		* error = result_error;
 		
 		return NSS_STATUS_UNAVAIL;
 	}
 	
-	// At this point, * document_text should point to valid content.
+	// At this point, document_text should point to valid content.
 	
 	
 	/*
@@ -69,10 +71,12 @@ enum nss_status _nss_exo_getspnam_r (const char * name, struct spwd * result, ch
 		then, the "noname.xml" argument will serve as its base.
 	*/
 	//document = xmlReadMemory (command_output, strlen (command_output), "noname.xml", NULL, 0);
-	document = xmlReadMemory (* document_text, strlen (* document_text), "noname.xml", NULL, 0);
+	document = xmlReadMemory (document_text, strlen (document_text), "noname.xml", NULL, 0);
 	//document = xmlReadMemory (command_output, 477, "noname.xml", NULL, 0);
 	//document = xmlReadMemory ("<?xml version=\"1.0\"?><doc/>", 27, "noname.xml", NULL, 0);
 	
+	// Uneeded anymore.
+	//free (* document_text);
 	free (document_text);
 	
 	//return NSS_STATUS_UNAVAIL;
@@ -315,7 +319,7 @@ enum nss_status _nss_exo_getspnam_r (const char * name, struct spwd * result, ch
 	free (minimum);
 	free (change);
 	//xmlFree (password);
-	xmlFreeDoc (document);
+	//xmlFreeDoc (document);
 	/*
 	if (error != 0)
 	{

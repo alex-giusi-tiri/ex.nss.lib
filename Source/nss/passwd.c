@@ -1,5 +1,5 @@
-#include "default.h"
-#include "tool.h"
+#include "../0.h"
+#include "../tool.h"
 
 #include <string.h>
 //#include <errno.h>
@@ -13,12 +13,12 @@ enum nss_status user_get (const char * get_type, const char * get, struct passwd
 {
 	//* error = 123;
 	
-	NSS_DEBUG ("user_get : Looking for the user \"%s\" (%s).\n", get, get_type);
+	NSS_DEBUG ("user_get : Looking for the user %s \"%s\".\n", get_type, get);
 	
 	//return NSS_STATUS_UNAVAIL;
 	
 	signed int result_error;
-	unsigned long long int command_output_size = sizeof (char) * (SHRT_MAX + 1);
+	//unsigned long long int command_output_size = sizeof (char) * (SHRT_MAX + 1);
 	//size_t command_output_size = sizeof (char) * 8;
 	uid_t * id;
 	gid_t * group_id;
@@ -31,7 +31,7 @@ enum nss_status user_get (const char * get_type, const char * get, struct passwd
 	xmlChar * home;
 	xmlChar * gecos;
 	
-	FILE * file;
+	//FILE * file;
 	
 	// The parsed XML document tree.
 	xmlDocPtr document;
@@ -41,23 +41,24 @@ enum nss_status user_get (const char * get_type, const char * get, struct passwd
 	//const xmlNodeSetPtr nodes;
 	//const xmlNodePtr node;
 	
-	char line [PATH_MAX];
+	// char line [PATH_MAX];
 	//char line [INT_MAX / 8];
 	//char line [USHRT_MAX];
 	//char line [SSIZE_MAX];
 	char command [PATH_MAX] = "";
 	//char command_output [ULLONG_MAX] = "";
 	//char command_output [SHRT_MAX + 1] = "";
-	char * command_output, * command_output_temp, * document_text;
+	char * document_text;
 	
 	// executable . " user get " . argument_type . " " . argument
 	// Argument count: 5
 	strcat (command, executable);
 	strcat (command, " passwd get ");
 	strcat (command, get_type);
-	strcat (command, " ");
+	strcat (command, " '");
 	strcat (command, get);
-	
+	strcat (command, "'");
+	/*
 	NSS_DEBUG ("user_get : Opening command... : \"%s\"", command);
 	// Open the command for reading.
 	file = popen (command, "r");
@@ -90,7 +91,7 @@ enum nss_status user_get (const char * get_type, const char * get, struct passwd
 	}
 	NSS_DEBUG ("user_get : Succeeded in running the executable : \"%s\".\n", command);
 	
-	//while (fgets (path, sizeof (path)/*-1*/, fp) != NULL)
+	//while (fgets (path, sizeof (path), fp) != NULL)
 	//{
 	//	//printf ("%s", path);
 	//}
@@ -158,30 +159,40 @@ enum nss_status user_get (const char * get_type, const char * get, struct passwd
 	}
 	
 	document_text = strdup (command_output);
+	*/
+	
+	//document_text = malloc (sizeof (char *));
+	
+	result_error = execute (command, & document_text);
+	
+	if (result_error != 0)
+	{
+		NSS_DEBUG ("user_get : Failed to run the command \"%s\".\n", command);
+		
+		* error = result_error;
+		
+		return NSS_STATUS_UNAVAIL;
+	}
+	
+	
+	//return 1;
+	
+	// At this point, document_text should point to valid content.
 	
 	
 	//return NSS_STATUS_UNAVAIL;
 	
 	// Uneeded anymore.
-	free (command_output);
+	// free (command_output);
 	//free (document_text);
 	//command_output = NULL;
 	
 	//return NSS_STATUS_UNAVAIL;
 	
-	
+	/*
 	result_error = WEXITSTATUS (pclose (file));
 	if (result_error != 0)
 	{
-		/*
-		free (id_text);
-		free (name);
-		free (password);
-		free (group_id_text);
-		free (shell);
-		free (home);
-		free (gecos);
-		*/
 		
 		free (document_text);
 		
@@ -191,28 +202,34 @@ enum nss_status user_get (const char * get_type, const char * get, struct passwd
 		
 		return NSS_STATUS_UNAVAIL;
 	}
-	
+	*/
 	NSS_DEBUG ("user_get : Obtained command output : \"%s\".\n", /*command_output*/document_text);
 	
 	//printf ("user_get : Obtained command output [24] : \"%c\".\n", command_output [24]);
 	
 	//return NSS_STATUS_UNAVAIL;
-	
+	/*
 	if (document_text == NULL)
 	{
 		NSS_DEBUG ("user_get : Failed to duplicate the XML document.\n");
 		
 		return NSS_STATUS_UNAVAIL;
 	}
+	*/
 	/*
 		As the document is in memory, it does not have a base, according to RFC 2396;
 		then, the "noname.xml" argument will serve as its base.
 	*/
+	
+	NSS_DEBUG ("nss-exo : user_get : Command output : \"%s\".\n", document_text);
+	
 	//document = xmlReadMemory (command_output, strlen (command_output), "noname.xml", NULL, 0);
 	document = xmlReadMemory (document_text, strlen (document_text), "noname.xml", NULL, 0);
 	//document = xmlReadMemory (command_output, 477, "noname.xml", NULL, 0);
 	//document = xmlReadMemory ("<?xml version=\"1.0\"?><doc/>", 27, "noname.xml", NULL, 0);
 	
+	// Uneeded anymore.
+	//free (* document_text);
 	free (document_text);
 	
 	//return NSS_STATUS_UNAVAIL;
@@ -441,8 +458,11 @@ enum nss_status user_get (const char * get_type, const char * get, struct passwd
 	}
 	
 	
-	
+	//printf ("%i = %i\n", result -> pw_uid, * id);
 	result -> pw_uid = * id;
+	//printf ("%i = %i\n", result -> pw_uid, * id);
+	//return 1;
+	
 	result -> pw_gid = * group_id;
 	
 	//user -> pw_name = (char *) name;

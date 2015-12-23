@@ -1,6 +1,6 @@
 //#define DEBUG 1
 
-#include "passwd.c"
+#include "../Source/nss/passwd.c"
 //#include <stdlib.h>
 //#include <linux/limits.h>
 
@@ -22,12 +22,15 @@ int main (int argc, char * argv [])
 	//free (error);
 	if (error == 0)
 	{
-		printf ("ID\t\t: [%s]\n", result.pw_uid);
-		printf ("Name\t\t: [%s]\n", result.pw_name);
-		printf ("Password\t: [%s]\n", result.pw_passwd);
-		printf ("Home\t\t: [%s]\n", result.pw_dir);
-		printf ("Shell\t\t: [%s]\n", result.pw_shell);
-		printf ("GECOS\t\t: [%s]\n", result.pw_gecos);
+		printf ("User:\n");
+		
+		printf ("\tID\t\t: [%i]\n", result.pw_uid);
+		printf ("\tName\t\t: [%s]\n", result.pw_name);
+		printf ("\tGroup ID\t: [%i]\n", result.pw_gid);
+		printf ("\tPassword\t: [%s]\n", result.pw_passwd);
+		printf ("\tHome\t\t: [%s]\n", result.pw_dir);
+		printf ("\tShell\t\t: [%s]\n", result.pw_shell);
+		printf ("\tGECOS\t\t: [%s]\n", result.pw_gecos);
 	}
 	else
 	{

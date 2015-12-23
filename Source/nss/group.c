@@ -1,5 +1,5 @@
-#include "default.h"
-#include "tool.h"
+#include "../0.h"
+#include "../tool.h"
 
 //#include <stdio.h>
 //#include <stdlib.h>
@@ -16,8 +16,8 @@
 enum nss_status group_get (const char * getter_type, const char * getter, struct group * result, char * buffer, size_t buffer_size, int * error)
 {
 	signed int result_error;
-	unsigned long long int command_output_size = sizeof (char) * (SHRT_MAX + 1);
-	char * command_output, * command_output_temp, * document_text;
+	//unsigned long long int command_output_size = sizeof (char) * (SHRT_MAX + 1);
+	char * document_text;
 	gid_t * id;
 	//const char * id_text;
 	xmlChar * name;
@@ -26,12 +26,13 @@ enum nss_status group_get (const char * getter_type, const char * getter, struct
 	unsigned long long int * members_count;
 	unsigned long long int member_index;
 	//void * buffer_memory;
+	//char * document_text;
 	
 	// The parsed XML document tree.
 	xmlDocPtr document;
 	
 	FILE * file;
-	char line [PATH_MAX];
+	//char line [PATH_MAX];
 	char command [PATH_MAX] = "";
 	
 	
@@ -40,9 +41,24 @@ enum nss_status group_get (const char * getter_type, const char * getter, struct
 	strcat (command, executable);
 	strcat (command, " group get ");
 	strcat (command, getter_type);
-	strcat (command, " ");
+	strcat (command, " '");
 	strcat (command, getter);
+	strcat (command, "'");
 	
+	result_error = execute (command, & document_text);
+	
+	if (result_error != 0)
+	{
+		NSS_DEBUG ("user_get : Failed to run the command \"%s\".\n", command);
+		
+		* error = result_error;
+		
+		return NSS_STATUS_UNAVAIL;
+	}
+	
+	// At this point, document_text should point to valid content.
+	
+	/*
 	// Open the command for reading.
 	NSS_DEBUG ("group_get (): Opening file...");
 	file = popen (command, "r");
@@ -102,15 +118,6 @@ enum nss_status group_get (const char * getter_type, const char * getter, struct
 	result_error = WEXITSTATUS (pclose (file));
 	if (result_error != 0)
 	{
-		/*
-		free (id_text);
-		free (name);
-		free (password);
-		free (group_id_text);
-		free (shell);
-		free (home);
-		free (gecos);
-		*/
 		
 		free (document_text);
 		
@@ -120,15 +127,16 @@ enum nss_status group_get (const char * getter_type, const char * getter, struct
 		
 		return NSS_STATUS_UNAVAIL;
 	}
-	
+	*/
 	NSS_DEBUG ("group_get : Obtained command output : \"%s\".\n", /*command_output*/document_text);
-	
+	/*
 	if (document_text == NULL)
 	{
 		NSS_DEBUG ("group_get : Failed to duplicate the XML document.\n");
 		
 		return NSS_STATUS_UNAVAIL;
 	}
+	*/
 	/*
 		As the document is in memory, it does not have a base, according to RFC 2396;
 		then, the "noname.xml" argument will serve as its base.
@@ -138,6 +146,7 @@ enum nss_status group_get (const char * getter_type, const char * getter, struct
 	//document = xmlReadMemory (command_output, 477, "noname.xml", NULL, 0);
 	//document = xmlReadMemory ("<?xml version=\"1.0\"?><doc/>", 27, "noname.xml", NULL, 0);
 	
+	//free (* document_text);
 	free (document_text);
 	
 	if (document == NULL)
@@ -305,15 +314,28 @@ enum nss_status group_get (const char * getter_type, const char * getter, struct
 		
 		//xmlFree (name);
 		
-		NSS_DEBUG ("group_set: Obtained member [%i]; name = [%s]", member_index, result -> gr_mem [member_index]);
+		NSS_DEBUG ("group_set: Obtained member [%i]; name = [%s]\n", member_index, result -> gr_mem [member_index]);
 	}
 	//while (member_index < members_count && result -> gr_mem [member_index ++] != NULL);
-	result -> gr_mem [member_index] == NULL;
+	result -> gr_mem [member_index] = NULL;
+	//result -> gr_mem [member_index] = malloc (sizeof (char));
+	//strcpy (result -> gr_mem [member_index], "\0");
 	NSS_DEBUG ("group_get : obtained [%i] members out of [%i] total.\n", member_index, * members_count);
 	
 	
 	xmlFreeDoc (document);
 	
+	/*
+		unsigned long int i = 0;
+		//for (unsigned long int i = 0; i < 1; ++ i)
+		while (result -> gr_mem [i] != NULL)
+		{
+			printf ("\tresult -> gr_mem [%i] == [%s]\n", i, result -> gr_mem [i]);
+			
+			++ i;
+		}
+	*/
+		
 	if (strlen ((const char *) name) + 1 + strlen ((const char *) password) + 1 > buffer_size)
 	{
 		NSS_DEBUG ("group_get : Provided buffer is too small.\n");
@@ -347,11 +369,15 @@ enum nss_status group_get (const char * getter_type, const char * getter, struct
 	
 	
 	
+	//return NSS_STATUS_UNAVAIL;
+	
 	result -> gr_gid = * id;
 	
 	result -> gr_name = (char *) name;
 	result -> gr_passwd = (char *) password;
 	//result -> gr_mem = /*already set*/;
+	
+	//return NSS_STATUS_UNAVAIL;
 	
 	
 	free (id);
@@ -371,9 +397,9 @@ enum nss_status group_get (const char * getter_type, const char * getter, struct
 }
 
 // Initialize grent functionality.
-enum nss_status _nss_sqlite_setgrent (void)
+enum nss_status _nss_exo_setgrent (void)
 {
-	NSS_DEBUG ("Initializing \"passwd\" functionality.\n");
+	NSS_DEBUG ("Initializing \"group\" functionality.\n");
 	
 	/*
 		this initialize the library and check potential ABI mismatches
@@ -388,9 +414,9 @@ enum nss_status _nss_sqlite_setgrent (void)
 }
 
 // Finalize grent functionality.
-enum nss_status _nss_sqlite_endgrent (void)
+enum nss_status _nss_exo_endgrent (void)
 {
-	NSS_DEBUG ("Finilizing \"passwd\" functionality.\n");
+	NSS_DEBUG ("Finilizing \"group\" functionality.\n");
 	
 	// Cleanup function for the XML library.
 	xmlCleanupParser ();
@@ -414,7 +440,7 @@ enum nss_status _nss_sqlite_endgrent (void)
 
 enum nss_status _nss_exo_getgrnam_r (const char * name, struct group * result, char * buffer, size_t buffer_size, int * error)
 {
-	NSS_DEBUG ("_nss_exo_getgrgid_r (): calling with group name [%s] and buffer size [%i].\n", name, buffer_size);
+	NSS_DEBUG ("_nss_exo_getgrnam_r (): calling with group name [%s] and buffer size [%i].\n", name, buffer_size);
 	
 	return group_get ("name", name, result, buffer, buffer_size, error);
 }
@@ -464,22 +490,24 @@ enum nss_status _nss_exo_initgroups_dyn (const char * name, gid_t group_id, long
 	//const xmlChar * password;
 	//const char * members_count_text;
 	long int size_new;
-	unsigned long long int command_output_size = sizeof (char) * (SHRT_MAX + 1);
-	char * command_output, * command_output_temp, * document_text;
+	//unsigned long long int command_output_size = sizeof (char) * (SHRT_MAX + 1);
+	char * document_text;
 	unsigned long long int * members_count;
 	unsigned long long int member_index;
 	//void * buffer_memory;
+	//char * document_text;
 	
 	// The parsed XML document tree.
 	xmlDocPtr document;
 	
-	FILE * file;
-	char line [PATH_MAX];
+	//FILE * file;
+	//char line [PATH_MAX];
 	char command [PATH_MAX] = "";
 	
 	
 	// executable . " group get " . getter_type . " " . getter
 	// 5
+	// Needs quotes by default.
 	strcat (command, executable);
 	strcat (command, " groups get ");
 	strcat (command, "name");
@@ -487,6 +515,21 @@ enum nss_status _nss_exo_initgroups_dyn (const char * name, gid_t group_id, long
 	strcat (command, name);
 	strcat (command, "'");
 	
+	
+	result_error = execute (command, & document_text);
+	
+	if (result_error != 0)
+	{
+		NSS_DEBUG ("user_get : Failed to run the command \"%s\".\n", command);
+		
+		* error = result_error;
+		
+		return NSS_STATUS_UNAVAIL;
+	}
+	
+	// At this point, document_text should point to valid content.
+	
+	/*
 	// Open the command for reading.
 	file = popen (command, "r");
 	
@@ -544,15 +587,6 @@ enum nss_status _nss_exo_initgroups_dyn (const char * name, gid_t group_id, long
 	result_error = WEXITSTATUS (pclose (file));
 	if (result_error != 0)
 	{
-		/*
-		free (id_text);
-		free (name);
-		free (password);
-		free (group_id_text);
-		free (shell);
-		free (home);
-		free (gecos);
-		*/
 		
 		free (document_text);
 		
@@ -563,7 +597,7 @@ enum nss_status _nss_exo_initgroups_dyn (const char * name, gid_t group_id, long
 		return NSS_STATUS_UNAVAIL;
 	}
 	
-	NSS_DEBUG ("_nss_exo_initgroups_dyn : Obtained command output : \"%s\".\n", /*command_output*/document_text);
+	NSS_DEBUG ("_nss_exo_initgroups_dyn : Obtained command output : \"%s\".\n", document_text);
 	
 	if (document_text == NULL)
 	{
@@ -571,6 +605,8 @@ enum nss_status _nss_exo_initgroups_dyn (const char * name, gid_t group_id, long
 		
 		return NSS_STATUS_UNAVAIL;
 	}
+	*/
+	
 	/*
 		As the document is in memory, it does not have a base, according to RFC 2396;
 		then, the "noname.xml" argument will serve as its base.

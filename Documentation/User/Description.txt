@@ -1,0 +1,10 @@
+Warning!
+==========================================
+Beta version!
+Can be bugged! Use at your own risk!
+==========================================
+A major bug is present when an error is encountered in the software, behaving in such a way that
+the handler is called over and over again, using up all the host's memory (swap too, if there is any),
+rendering the machine unoperable by freezing it;
+only a reset would allow control to be regained, along with modifying "/etc/nsswitch.conf" back to its original configuration,
+possibly only if the "exo" module (this software) was placed in a higher order of preference than the system (files) modules.
