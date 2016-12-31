@@ -43,7 +43,7 @@ The accepted calling arguments are:
 
 The second step is to tell glibc that we use this lib. Open /etc/nsswitch.conf
 and add "exo" on the lines which you want to use the software for.
-The currently supported Name Service Switch services are passwd, groups, and shadow.
+The currently supported Name Service Switch services are passwd, group, and shadow.
 You should obtain something like this:
 
 ...

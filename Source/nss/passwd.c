@@ -13,11 +13,13 @@ enum nss_status user_get (const char * get_type, const char * get, struct passwd
 {
 	//* error = 123;
 	
+	NSS_DEBUG ("user_get : Called with buffer size of %u.\n", buffer_size);
 	NSS_DEBUG ("user_get : Looking for the user %s \"%s\".\n", get_type, get);
 	
 	//return NSS_STATUS_UNAVAIL;
 	
 	signed int result_error;
+	unsigned int required_buffer_size;
 	//unsigned long long int command_output_size = sizeof (char) * (SHRT_MAX + 1);
 	//size_t command_output_size = sizeof (char) * 8;
 	uid_t * id;
@@ -298,7 +300,7 @@ enum nss_status user_get (const char * get_type, const char * get, struct passwd
 		
 		return NSS_STATUS_UNAVAIL;
 	}
-	NSS_DEBUG ("user_get : Obtained : Name : [%s].\n", (const char *) name);
+	NSS_DEBUG ("user_get : Obtained : Name : [%s].\n", name);
 	
 	//return NSS_STATUS_UNAVAIL;
 	
@@ -319,7 +321,7 @@ enum nss_status user_get (const char * get_type, const char * get, struct passwd
 		
 		return NSS_STATUS_UNAVAIL;
 	}
-	NSS_DEBUG ("user_get : Obtained : Password : [%s].\n", (const char *) password);
+	NSS_DEBUG ("user_get : Obtained : Password : [%s].\n", password);
 	
 	
 	// Get the main group's ID.
@@ -360,7 +362,7 @@ enum nss_status user_get (const char * get_type, const char * get, struct passwd
 		
 		return NSS_STATUS_UNAVAIL;
 	}
-	NSS_DEBUG ("user_get : Obtained : Shell : [%s].\n", (const char *) shell);
+	NSS_DEBUG ("user_get : Obtained : Shell : [%s].\n", shell);
 	
 	
 	// Get the home path.
@@ -382,7 +384,7 @@ enum nss_status user_get (const char * get_type, const char * get, struct passwd
 		
 		return NSS_STATUS_UNAVAIL;
 	}
-	NSS_DEBUG ("user_get : Obtained : Home : [%s].\n", (const char *) home);
+	NSS_DEBUG ("user_get : Obtained : Home : [%s].\n", home);
 	
 	
 	// Get the GECOS field.
@@ -404,7 +406,7 @@ enum nss_status user_get (const char * get_type, const char * get, struct passwd
 		
 		return NSS_STATUS_UNAVAIL;
 	}
-	NSS_DEBUG ("user_get : Obtained : GECOS field : [%s].\n", (const char *) gecos);
+	NSS_DEBUG ("user_get : Obtained : GECOS field : [%s].\n", gecos);
 	
 	//
 	// Loops here?
@@ -417,6 +419,7 @@ enum nss_status user_get (const char * get_type, const char * get, struct passwd
 	//home = sqlite3_column_text(pSt, 3);
 	
 	xmlFreeDoc (document);
+	NSS_DEBUG ("user_get : Freed XML document.\n");
 	
 	// Close executable's file pointer.
 	//pclose (fp);
@@ -441,7 +444,9 @@ enum nss_status user_get (const char * get_type, const char * get, struct passwd
 	//else if (error != 0)
 	//	return NSS_STATUS_FAILURE;
 	
-	if (strlen ((const char *) name) + 1 + strlen ((const char *) password) + 1 + strlen ((const char *) home) + 1 + strlen ((const char *) shell) + 1 + strlen ((const char *) gecos) + 1 > buffer_size)
+	required_buffer_size = strlen (name) + 1 + strlen (password) + 1 + strlen (home) + 1 + strlen (shell) + 1 + strlen (gecos) + 1;
+	//if (strlen (name) + 1 + strlen (password) + 1 + strlen (home) + 1 + strlen (shell) + 1 + strlen (gecos) + 1 > buffer_size)
+	if (required_buffer_size > buffer_size)
 	{
 		xmlFree (name);
 		xmlFree (password);
@@ -452,7 +457,9 @@ enum nss_status user_get (const char * get_type, const char * get, struct passwd
 		//* error = errno;
 		* error = ERANGE;
 		
-		//NSS_DEBUG ("user_get : Failed to run the executable : \"%s\".\n", command);
+		NSS_DEBUG ("user_get : Buffer size exceeded : %i.\n", required_buffer_size);
+		
+		NSS_DEBUG ("user_get : Returning retrial.\n");
 		
 		return NSS_STATUS_TRYAGAIN;
 	}
@@ -487,6 +494,8 @@ enum nss_status user_get (const char * get_type, const char * get, struct passwd
 	
 	
 	* error = errno;
+	
+	NSS_DEBUG ("user_get : Returning successfully.\n");
 	
 	return NSS_STATUS_SUCCESS;
 }
@@ -537,7 +546,7 @@ enum nss_status _nss_exo_getpwent_r (struct passwd * result, char * buffer, size
 // Get user by its name.
 enum nss_status _nss_exo_getpwnam_r (const char * name, struct passwd * result, char * buffer, size_t buffer_size, int * error)
 {
-	NSS_DEBUG ("_nss_exo_getpwnam_r () : Getting user by its name \"%s\".\n", name);
+	NSS_DEBUG ("_nss_exo_getpwnam_r : Getting user by its name \"%s\".\n", name);
 	
 	//return NSS_STATUS_UNAVAIL;
 	return user_get ("name", name, result, buffer, buffer_size, error);
@@ -546,7 +555,7 @@ enum nss_status _nss_exo_getpwnam_r (const char * name, struct passwd * result, 
 // Get user by its ID.
 enum nss_status _nss_exo_getpwuid_r (uid_t id, struct passwd * result, char * buffer, size_t buffer_size, int * error)
 {
-	NSS_DEBUG ("_nss_exo_getpwuid_r () : Getting user by its ID %i.\n", id);
+	NSS_DEBUG ("_nss_exo_getpwuid_r : Getting user by its ID %i.\n", id);
 	
 	// Include the terminating NULL character.
 	char id_text [12];

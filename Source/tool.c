@@ -1,6 +1,7 @@
 #include "0.h"
 #include "tool.h"
 
+#include <stdbool.h>
 #include <string.h>
 #include <malloc.h>
 #include <errno.h>
@@ -270,7 +271,9 @@ const signed int execute (const char * command, char ** output)
 	//return NSS_STATUS_UNAVAIL;
 	
 	signed int error;
+	//unsigned long long int command_output_size = sizeof (char) * (SSIZE_MAX + 1);
 	unsigned long long int command_output_size = sizeof (char) * (SHRT_MAX + 1);
+	//unsigned long long int command_output_size = sizeof (char) * (PATH_MAX + 1);
 	//unsigned long long int command_output_size = sizeof (char) * 8;
 	
 	FILE * file;
@@ -343,7 +346,9 @@ const signed int execute (const char * command, char ** output)
 	//return NSS_STATUS_UNAVAIL;
 	
 	command_output = malloc (command_output_size);
+	NSS_DEBUG ("execute : Allocated memory for the output of command...\n");
 	strcpy (command_output, "");
+	NSS_DEBUG ("execute : Emptied the output of command...\n");
 	//* command_output = "";
 	//command_output [0] = '\0';
 	
@@ -359,11 +364,13 @@ const signed int execute (const char * command, char ** output)
 	//NSS_DEBUG ("user_get : (sizeof (char) * (SHRT_MAX + 1)) : \"%d\"", (sizeof (char) * (SHRT_MAX + 1)));
 	
 	
+	NSS_DEBUG ("execute : Reading command output : lines.\n");
 	// Read the output one line at a time and save the line.
 	while (fgets (line, USHRT_MAX - 1, file) != NULL)
+	//while (false)
 	{
 		//printf ("%s", line);
-		NSS_DEBUG ("execute : Read line : \"%s\"", line);
+		NSS_DEBUG ("execute : Read line : \"%s\"\n", line);
 		
 		//NSS_DEBUG ("user_get : strlen (command_output) + strlen (line) + 1 : \"%d\"", strlen (command_output) + strlen (line) + 1);
 		//NSS_DEBUG ("user_get : sizeof (command_output) : \"%d\"", sizeof (command_output));
@@ -386,6 +393,7 @@ const signed int execute (const char * command, char ** output)
 				return EXIT_FAILURE;
 			}
 			
+			//command_output_size *= 2;
 			command_output = command_output_temp;
 			
 			//NSS_DEBUG ("user_get : sizeof (char) * sizeof (command_output) * 2) : size : new \"%d\"", sizeof (char) * sizeof (command_output) * 2);

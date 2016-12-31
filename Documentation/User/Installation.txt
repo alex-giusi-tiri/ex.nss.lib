@@ -4,7 +4,7 @@ nss-exo
 	"nss-exo" is a library which can be used to provide authentication services using externally stored entries.
 	It has not been tested!
 	
-	Arch packages will be soon available.
+	Arch packages should soon be available.
 
 
  1. Prerequisites
@@ -19,11 +19,12 @@ nss-exo
 	Whatever your delegated handler requires.
 	The example handler uses PHP 5.6.16. By default, "/etc/nss/exo/handler" expects "/etc/nss/exo/handler.php" to exist.
 
+
  2. Installation
 -----------------
 
 	For example:
-		cd nss-exo/
+		cd nss-exo/Compilation
 		./preparation.sh
 		./configure CFLAGS='-O2' [--enable-debug]
 		make
@@ -44,5 +45,5 @@ nss-exo
 ---------------------
 
 Consult "https://github.com/alex-giusi-tiri/nss-exo".
-EMail: alex_giusi_tiri@yahoo.com
+EMail: alex_giusi_tiri2@yahoo.com
 IRC: AGTT@irc.freenode.net

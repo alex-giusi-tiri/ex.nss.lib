@@ -8,6 +8,12 @@ int main (int argc, char * argv [])
 {
 	//fn_tst ();
 	
+	printf ("SSIZE_MAX == %u\n", SSIZE_MAX);	// 4294967295
+	printf ("USHRT_MAX == %u\n", USHRT_MAX);	// 65535
+	printf ("PATH_MAX == %u\n", PATH_MAX);		// 4096
+	
+	return 0;
+	
 	struct group group;
 	gid_t ** groups;
 	
@@ -32,8 +38,6 @@ int main (int argc, char * argv [])
 	index = 0;
 	_nss_exo_initgroups_dyn ("college", 0, & index, & size, groups, 0, & error_groups);
 	
-	//printf ("USHRT_MAX == %u\n", USHRT_MAX);
-	//printf ("SSIZE_MAX == %u\n", SSIZE_MAX);
 	
 	//printf ("Error: %i\n.", * error);
 	
