@@ -234,6 +234,7 @@ enum nss_status _nss_exo_endpwent (void)
 	//#endif
 	
 	NSS_DEBUG ("Finilized [passwd] functionality\n");
+	
 	return NSS_STATUS_SUCCESS;
 }
 

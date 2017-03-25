@@ -24,9 +24,11 @@ const bool transmit (const char * message)
 {
 	unsigned int message_length;
 	unsigned int message_sent_length;
+	void * context;
+	void * socket;
 	
-	void * context = zmq_ctx_new ();
-	void * socket = zmq_socket (context, ZMQ_PUB);
+	context = zmq_ctx_new ();
+	socket = zmq_socket (context, ZMQ_PUB);
 	
 	if (zmq_bind (socket, "tcp://127.0.0.1:2131") != 0)
 	{
@@ -50,9 +52,12 @@ const bool transmit (const char * message)
 const bool receive (char * message)
 {
 	char buffer [256];
+	unsigned short int message_received_length;
+	void * context;
+	void * socket;
 	
-	void * context = zmq_ctx_new ();
-	void * socket = zmq_socket (context, ZMQ_SUB);
+	context = zmq_ctx_new ();
+	socket = zmq_socket (context, ZMQ_SUB);
 	
 	if (zmq_connect (socket, "tcp://127.0.0.1:2132") != 0)
 	{

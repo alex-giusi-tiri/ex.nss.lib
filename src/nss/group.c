@@ -201,13 +201,14 @@ enum nss_status _nss_exo_initgroups_dyn (const char * user_name, gid_t group_mai
 {
 	NSS_DEBUG ("_nss_exo_initgroups_dyn : Called.");
 	
-	NSS_DEBUG ("_nss_exo_initgroups_dyn : size: %i; index: %i; limit: %i.", *size, *index, limit);
+	NSS_DEBUG ("_nss_exo_initgroups_dyn : size: %i; index: %i; limit: %i.", *size_current, *index_next, size_limit_max);
 	
+	char * success_text;
 	char * groups_count_text;
 	char * id_temp_text;
-	gid_t id_temp;
 	unsigned long int groups_count;
 	unsigned long int size_new;
+	gid_t id_temp;
 	gid_t * groups_temp;
 	
 //	signed int result_error;
@@ -249,9 +250,9 @@ enum nss_status _nss_exo_initgroups_dyn (const char * user_name, gid_t group_mai
 		return NSS_STATUS_UNAVAIL;
 	
 	
-	// Send the request:
-	if (!transmit (message))
-		return NSS_STATUS_UNAVAIL;
+	//// Send the request:
+	//if (!transmit (message))
+	//	return NSS_STATUS_UNAVAIL;
 	
 	
 	// Get the success status:
@@ -270,6 +271,7 @@ enum nss_status _nss_exo_initgroups_dyn (const char * user_name, gid_t group_mai
 	// Get the user ID (as a character pointer):
 	if (!receive (groups_count_text))
 	{
+		free (success_text);
 		return NSS_STATUS_UNAVAIL;
 	}
 	
@@ -281,6 +283,7 @@ enum nss_status _nss_exo_initgroups_dyn (const char * user_name, gid_t group_mai
 	
 	if (size_limit_max > 0 && size_new > size_limit_max)
 	{
+		free (success_text);
 		//free (count_text);
 		
 		// limit exceeded; tell caller to try with a larger one
@@ -295,7 +298,7 @@ enum nss_status _nss_exo_initgroups_dyn (const char * user_name, gid_t group_mai
 	
 	//* size = count;
 	
-	NSS_DEBUG ("size_new==[%u], *size==[%u]", size_new, *size);
+	NSS_DEBUG ("size_new==[%u], *size==[%u]", size_new, *size_current);
 	if (size_new > *size_current)
 	{
 		//(* size) = (* index) + 1 + (* members_count);
@@ -320,6 +323,7 @@ enum nss_status _nss_exo_initgroups_dyn (const char * user_name, gid_t group_mai
 		{
 			//pclose (file);
 			
+			free (success_text);
 			//free (members_count);
 			//xmlFreeDoc (document);
 			
