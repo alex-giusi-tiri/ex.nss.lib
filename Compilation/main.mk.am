@@ -1,5 +1,0 @@
-lib_LTLIBRARIES = libnss_exo.la
-libnss_exo_la_SOURCES = ../Source/nss/group.c ../Source/nss/passwd.c ../Source/nss/shadow.c ../Source/tool.c
-libnss_exo_la_LDFLAGS = -version-info 2:0:0
-EXTRA_DIST = ../Source/nss/0.h ../Source/tool.h
-ACLOCAL_AMFLAGS = -I m4 subdir-objects

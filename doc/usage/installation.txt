@@ -1,10 +1,7 @@
 nss-exo
 ========
 
-	"nss-exo" is a library which can be used to provide authentication services using externally stored entries.
-	It has not been tested!
-	
-	Arch packages should soon be available.
+	"exo" is a nss library which can be used to provide authentication services using externally stored entries.
 
 
  1. Prerequisites
@@ -37,13 +34,13 @@ nss-exo
  3. Configuration
 ------------------
 
-	There is no specific configuration for nss-exo.
+	There is no specific configuration for "exo".
 	There is some currently planned, like specifying the external delegated handler.
 
 
  4. More information
 ---------------------
 
-Consult "https://github.com/alex-giusi-tiri/nss-exo".
-EMail: alex_giusi_tiri2@yahoo.com
+Consult "https://github.com/alex-giusi-tiri/exo.nss.lib".
+E-Mail: alex_giusi_tiri2@yahoo.com
 IRC: AGTT@irc.freenode.net
