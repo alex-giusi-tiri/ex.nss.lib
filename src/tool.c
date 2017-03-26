@@ -11,6 +11,7 @@
 #include <pwd.h>
 #include <sqlite3.h>
 */
+#include <zmq.h>
 
 /*
 void fn_tst (void)

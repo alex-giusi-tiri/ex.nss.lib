@@ -6,10 +6,12 @@
 //#include <grp.h>
 //#include <pwd.h>
 
+/*
 #include <libxml/tree.h>
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
 #include <libxml/xpathInternals.h>
+*/
 
 //void fn_tst (void);
 //const long double * xml_xpath_evaluate_content_number (const xmlDocPtr /* document*/, const char */* expression*//*, const int &*//* radix*/, const unsigned long long int /* index*/, const bool /* strict*/);

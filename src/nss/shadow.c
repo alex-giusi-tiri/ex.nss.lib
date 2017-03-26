@@ -1,5 +1,5 @@
 #include "../main.h"
-//#include "../tool.h"
+#include "../tool.h"
 
 //#include <errno.h>
 #include <grp.h>

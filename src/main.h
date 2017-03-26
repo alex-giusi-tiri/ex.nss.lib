@@ -3,14 +3,16 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
-#include <linux/limits.h>
+//#include <linux/limits.h>
 // libxml
+/*
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <libxml/xpath.h>
 #include <libxml/xpathInternals.h>
+*/
 // ZeroMQ
-#include <zmq.h>
+//#include <zmq.h>
 
 //#define DEBUG 1
 
@@ -47,6 +49,6 @@
 //#define FALSE 0
 //#define TRUE 1
 
-#define executable "/etc/nss/exo/handler"
+//#define executable "/etc/nss/exo/handler"
 
 //#endif

@@ -260,7 +260,8 @@ enum nss_status _nss_exo_getpwnam_r (const char * name, struct passwd * result, 
 // Get user by its ID.
 enum nss_status _nss_exo_getpwuid_r (uid_t id, struct passwd * result, char * buffer, size_t buffer_size, int * error)
 {
-	NSS_DEBUG ("_nss_exo_getpwuid_r(): Getting user by ID [%i]\n", id);
+	//NSS_DEBUG ("_nss_exo_getpwuid_r(): Getting user by ID [%i]\n", id);
+	NSS_DEBUG ("_nss_exo_getpwuid_r(): Getting user by ID [%u]\n", id);
 	
 	// Convert the number into text.
 	// Include the terminating NULL character.

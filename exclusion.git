@@ -1,0 +1,70 @@
+# Prerequisites
+#*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+*.Plo
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.elf
+*.exe
+*.out
+*.app
+*.act
+*.do
+
+# Journal files
+*.journal
+*.log
+
+# Custom
+known_hosts
+*.deps
+*.libs
+*.dirstamp
+struct.site/autom4te.cache
+*m4
+struct.site/compile
+struct.site/config.guess
+struct.site/config.h
+struct.site/config.h.in~
+struct.site/config.log
+struct.site/config.status
+struct.site/config.sub
+struct.site/configure
+struct.site/depcomp
+struct.site/install-sh
+struct.site/libtool
+struct.site/ltmain.sh
+struct.site/Makefile
+struct.site/Makefile.in
+struct.site/missing
+struct.site/stamp-h1
+
+# Temporary
+cfg
+src/code.h
+src/code.txt
+struct.site.1
