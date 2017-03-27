@@ -1,4 +1,8 @@
-#pragma once
+//#pragma once
+#ifndef nss_exo_tool_h
+#define nss_exo_tool_h
+
+//#include "nss-exo.h"
 
 #include <stdbool.h>
 
@@ -28,3 +32,5 @@
 const bool transmit (const char */* message*/);
 //const bool receive (char */* message*/, const char */* uri*/);
 const bool receive (char */* message*/);
+
+#endif

@@ -1,10 +1,10 @@
-#include "main.h"
+//#include "nss-exo.h"
 #include "tool.h"
 
 #include <stdbool.h>
 #include <string.h>
-#include <malloc.h>
-#include <errno.h>
+//#include <malloc.h>
+//#include <errno.h>
 /*
 #include <errno.h>
 #include <grp.h>

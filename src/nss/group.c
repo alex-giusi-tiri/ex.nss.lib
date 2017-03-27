@@ -1,122 +1,19 @@
-#include "../main.h"
-#include "../tool.h"
+#include "group.tool.h"
 
-//#include <stdio.h>
-//#include <stdlib.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <errno.h>
+//#include <malloc.h>
+//#include <pthread.h>
 //#include <linux/limits.h>
-//#include <nss.h>
-//#include <errno.h>
+
+#include <nss.h>
 #include <grp.h>
-#include <malloc.h>
-#include <pthread.h>
 #include <string.h>
 
-/*
-*/
-enum nss_status group_get (const char * getter_type, const char * getter_content, struct group * result, char * buffer, size_t buffer_size, int * error)
-{
-	NSS_DEBUG ("group_get : Called with buffer size of [%u]\n", buffer_size);
-	NSS_DEBUG ("group_get : Looking for group %s [%s]\n", getter_type, getter_content);
-	
-	//signed int result_error_code;
-	//unsigned long long int command_output_size = sizeof (char) * (SHRT_MAX + 1);
-	//char * document_text;
-	gid_t id;
-	char * id_text;
-	char * name;
-	char * password;
-	//const char * members_count_text;
-//	unsigned long long int * members_count;
-//	unsigned long long int member_index;
-	//void * buffer_memory;
-	//char * document_text;
-	
-	// The parsed XML document tree.
-	//xmlDocPtr document;
-	
-	//FILE * file;
-	//char line [PATH_MAX];
-	//char command [PATH_MAX] = "";
-	
-	/*
-	char message [256];
-	// Prepare the message.
-	// executable . " group get " . getter_type . " " . getter
-	// Argument count: 5
-	message = "";
-	//strcat (message, executable);
-	strcat (message, "get group ");
-	strcat (message, getter_type);
-	strcat (message, " ");
-	strcat (message, getter_content);
-	//strcat (message, "\0");
-	*/
-	
-	//// Send the request:
-	//if (!transmit (message))
-	//	return NSS_STATUS_UNAVAIL;
-	// Send the request (in parts):
-	if (!transmit ("get"))
-		return NSS_STATUS_UNAVAIL;
-	if (!transmit ("group"))
-		return NSS_STATUS_UNAVAIL;
-	if (!transmit (getter_type))
-		return NSS_STATUS_UNAVAIL;
-	if (!transmit (getter_content))
-		return NSS_STATUS_UNAVAIL;
-	
-	
-	// Get the group ID (as a character pointer):
-	if (!receive (id_text))
-	{
-		return NSS_STATUS_UNAVAIL;
-	}
-	
-	// Get the name:
-	if (!receive (name))
-	{
-		free (id_text);
-		
-		return NSS_STATUS_UNAVAIL;
-	}
-	
-	// Get the password:
-	if (!receive (password))
-	{
-		free (id_text);
-		free (name);
-		
-		return NSS_STATUS_UNAVAIL;
-	}
-	
-	
-	// Convert the texts into numbers:
-	id = strtoul (id_text, NULL, 10);
-	
-	result -> gr_gid = id;
-	
-	result -> gr_name = name;
-	result -> gr_passwd = password;
-	//result -> gr_mem = /*already set*/;
-	
-	//return NSS_STATUS_UNAVAIL;
-	
-	
-	free (id_text);
-	//free (group_id);
-	//xmlFree (name);
-	//xmlFree (password);
-	//xmlFree (home);
-	//xmlFree (shell);
-	//xmlFree (gecos);
-	
-	
-	*error = errno;
-	
-	NSS_DEBUG ("group_get : Returning successfully\n");
-	
-	return NSS_STATUS_SUCCESS;
-}
+#include "../nss.exo.h"
+#include "../tool.h"
+
 
 // Initialize grent functionality.
 enum nss_status _nss_exo_setgrent (void)
@@ -124,6 +21,7 @@ enum nss_status _nss_exo_setgrent (void)
 	NSS_DEBUG ("Initializing [group] functionality...\n");
 	
 	NSS_DEBUG ("Initialized [group] functionality\n");
+	
 	return NSS_STATUS_SUCCESS;
 }
 
@@ -133,6 +31,7 @@ enum nss_status _nss_exo_endgrent (void)
 	NSS_DEBUG ("Finalizing [group] functionality...\n");
 	
 	NSS_DEBUG ("Finalized [group] functionality\n");
+	
 	return NSS_STATUS_SUCCESS;
 }
 
@@ -148,7 +47,7 @@ enum nss_status _nss_exo_getgrnam_r (const char * name, struct group * result, c
 {
 	NSS_DEBUG ("_nss_exo_getgrnam_r(): calling with group name [%s] and buffer size [%i].\n", name, buffer_size);
 	
-	return group_get ("name", name, result, buffer, buffer_size, error);
+	return nss_exo_tool_group_get ("name", name, result, buffer, buffer_size, error);
 }
 
 /*
@@ -164,11 +63,11 @@ enum nss_status _nss_exo_getgrgid_r (gid_t id, struct group * result, char * buf
 {
 	NSS_DEBUG ("_nss_exo_getgrgid_r (): calling with group ID [%d] and buffer size [%i].\n", id, buffer_size);
 	
-	// Include the terminating NULL character (byte).
+	// Include the terminating null character.
 	char id_text [12];
 	snprintf (id_text, 12, "%d", id);
 	
-	return group_get ("id", id_text, result, buffer, buffer_size, error);
+	return nss_exo_tool_group_get ("id", id_text, result, buffer, buffer_size, error);
 }
 
 /*
@@ -266,24 +165,26 @@ enum nss_status _nss_exo_initgroups_dyn (const char * user_name, gid_t group_mai
 		free (success_text);
 		return NSS_STATUS_UNAVAIL;
 	}
+	free (success_text);
 	
 	
 	// Get the user ID (as a character pointer):
 	if (!receive (groups_count_text))
 	{
-		free (success_text);
+		//free (success_text);
 		return NSS_STATUS_UNAVAIL;
 	}
 	
 	// Convert the groups_count_text to number.
 	groups_count = strtoul (groups_count_text, NULL, 10);
+	free (groups_count_text);
 	
 	
 	size_new = (*index)/* + 1*/ + /*sizeof (gid_t *) * */groups_count;
 	
 	if (size_limit_max > 0 && size_new > size_limit_max)
 	{
-		free (success_text);
+		//free (success_text);
 		//free (count_text);
 		
 		// limit exceeded; tell caller to try with a larger one
@@ -323,7 +224,7 @@ enum nss_status _nss_exo_initgroups_dyn (const char * user_name, gid_t group_mai
 		{
 			//pclose (file);
 			
-			free (success_text);
+			//free (success_text);
 			//free (members_count);
 			//xmlFreeDoc (document);
 			
@@ -359,6 +260,7 @@ enum nss_status _nss_exo_initgroups_dyn (const char * user_name, gid_t group_mai
 		// Get the group ID (as a character pointer):
 		if (!receive (id_temp_text))
 		{
+			free (id_temp_text);
 			return NSS_STATUS_UNAVAIL;
 		}
 		
@@ -374,7 +276,7 @@ enum nss_status _nss_exo_initgroups_dyn (const char * user_name, gid_t group_mai
 		//groups [member_index] = id;
 		(*groups) [group_index] = id_temp;
 		
-		NSS_DEBUG ("_nss_exo_initgroups_dyn : id_text == [%s].\n", id_temp_text);
+		NSS_DEBUG ("_nss_exo_initgroups_dyn : id_text == [%s].\n", *id_temp_text);
 		NSS_DEBUG ("_nss_exo_initgroups_dyn : id == [%i].\n", id_temp);
 		//free (id);
 		
@@ -383,6 +285,8 @@ enum nss_status _nss_exo_initgroups_dyn (const char * user_name, gid_t group_mai
 		
 		NSS_DEBUG ("_nss_exo_initgroups_dyn : (*groups) [%i] == [%i].\n", group_index, (*groups) [group_index]);
 		//NSS_DEBUG ("_nss_exo_initgroups_dyn : * (groups [%i]) == %i.\n", member_index, * (groups [member_index]));
+		
+		free (id_temp_text);
 	}
 	//while (member_index < members_count && result -> gr_mem [member_index ++] != NULL);
 	
@@ -407,6 +311,10 @@ enum nss_status _nss_exo_initgroups_dyn (const char * user_name, gid_t group_mai
 	//xmlFree (home);
 	//xmlFree (shell);
 	//xmlFree (gecos);
+	
+	//free (success_text);
+	//free (id_temp_text);
+	
 	
 	
 	//*error = errno;
