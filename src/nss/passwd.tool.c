@@ -18,8 +18,8 @@ enum nss_status nss_exo_tool_user_get (const char * getter_type, const char * ge
 {
 	//* error = 123;
 	
-	NSS_DEBUG ("user_get : Called with buffer size of [%u]\n", buffer_size);
-	NSS_DEBUG ("user_get : Looking for user %s [%s]\n", getter_type, getter_content);
+	NSS_DEBUG ("nss_exo_tool_user_get():: Called with buffer size of [%u]\n", buffer_size);
+	NSS_DEBUG ("nss_exo_tool_user_get():: Looking for user %s [%s]\n", getter_type, getter_content);
 	
 	//return NSS_STATUS_UNAVAIL;
 	
@@ -54,60 +54,99 @@ enum nss_status nss_exo_tool_user_get (const char * getter_type, const char * ge
 	*/
 	
 	// Send the request (in parts):
-	if (!transmit ("get"))
+	NSS_DEBUG ("nss_exo_tool_user_get()::transmit(get)\n");
+	if (!nss_exo_transmit ("get"))
+	{
+		NSS_DEBUG ("nss_exo_tool_user_get()::transmit(get)::failed\n");
 		return NSS_STATUS_UNAVAIL;
-	if (!transmit ("user"))
+	}
+	NSS_DEBUG ("nss_exo_tool_user_get()::transmit(get)::succeeded\n");
+	
+	NSS_DEBUG ("nss_exo_tool_user_get()::transmit(user)\n");
+	if (!nss_exo_transmit ("user"))
+	{
+		NSS_DEBUG ("nss_exo_tool_user_get()::transmit(user)::failed\n");
 		return NSS_STATUS_UNAVAIL;
-	if (!transmit (getter_type))
+	}
+	NSS_DEBUG ("nss_exo_tool_user_get()::transmit(user)::succeeded\n");
+	
+	NSS_DEBUG ("nss_exo_tool_user_get()::transmit(getter_type)\n");
+	if (!nss_exo_transmit (getter_type))
+	{
+		NSS_DEBUG ("nss_exo_tool_user_get()::transmit(getter_type)::failed\n");
 		return NSS_STATUS_UNAVAIL;
-	if (!transmit (getter_content))
+	}
+	NSS_DEBUG ("nss_exo_tool_user_get()::transmit(getter_type)::succeeded\n");
+	
+	NSS_DEBUG ("nss_exo_tool_user_get()::transmit(getter_content)\n");
+	if (!nss_exo_transmit (getter_content))
+	{
+		NSS_DEBUG ("nss_exo_tool_user_get()::transmit(getter_content)::failed\n");
 		return NSS_STATUS_UNAVAIL;
+	}
+	NSS_DEBUG ("nss_exo_tool_user_get()::transmit(getter_content)::succeeded\n");
 	
 	
+	NSS_DEBUG ("nss_exo_tool_user_get()::receive(success_text)\n");
 	// Get the success status:
-	if (!receive (success_text))
+	if (!nss_exo_receive (success_text))
 	{
 		return NSS_STATUS_UNAVAIL;
 	}
+	NSS_DEBUG ("nss_exo_tool_user_get()::receive(success_text)::succeeded\n");
 	
+	NSS_DEBUG ("nss_exo_tool_user_get()::(success_text?=false)\n");
 	if (success_text == "0")
 	{
+		NSS_DEBUG ("nss_exo_tool_user_get()::success_text==false\n");
 		free (success_text);
 		
 		return NSS_STATUS_UNAVAIL;
 	}
+	NSS_DEBUG ("nss_exo_tool_user_get()::success_text==true\n");
 	free (success_text);
 	
 	// Get the user ID (as a character pointer):
-	if (!receive (id_text))
+	NSS_DEBUG ("nss_exo_tool_user_get()::receive(id_text)\n");
+	if (!nss_exo_receive (id_text))
 	{
+		NSS_DEBUG ("nss_exo_tool_user_get()::receive(id_text)::failed\n");
 		free (success_text);
 		
 		return NSS_STATUS_UNAVAIL;
 	}
+	NSS_DEBUG ("nss_exo_tool_user_get()::receive(id_text)::succeeded\n");
 	
 	// Get the primary group ID (as a character pointer):
-	if (!receive (group_id_text))
+	NSS_DEBUG ("nss_exo_tool_user_get()::receive(group_id_text)\n");
+	if (!nss_exo_receive (group_id_text))
 	{
+		NSS_DEBUG ("nss_exo_tool_user_get()::receive(group_id_text)\n");
 		//free (success_text);
 		free (id_text);
 		
 		return NSS_STATUS_UNAVAIL;
 	}
+	NSS_DEBUG ("nss_exo_tool_user_get()::receive(grouup_id_text)\n");
 	
 	// Get the name:
-	if (!receive (name))
+	NSS_DEBUG ("nss_exo_tool_user_get()::receive(name)\n");
+	if (!nss_exo_receive (name))
 	{
+		NSS_DEBUG ("nss_exo_tool_user_get()::receive(name)::failed\n");
 		//free (success_text);
 		free (id_text);
 		free (group_id_text);
 		
 		return NSS_STATUS_UNAVAIL;
 	}
+	NSS_DEBUG ("nss_exo_tool_user_get()::receive(name)::succeeded\n");
 	
 	// Get the password:
-	if (!receive (password))
+	NSS_DEBUG ("nss_exo_tool_user_get()::receive(password)\n");
+	if (!nss_exo_receive (password))
 	{
+		NSS_DEBUG ("nss_exo_tool_user_get()::receive(password)::failed\n");
 		//free (success_text);
 		free (id_text);
 		free (group_id_text);
@@ -115,10 +154,13 @@ enum nss_status nss_exo_tool_user_get (const char * getter_type, const char * ge
 		
 		return NSS_STATUS_UNAVAIL;
 	}
+	NSS_DEBUG ("nss_exo_tool_user_get()::receive(password)::succeeded\n");
 	
 	// Get the shell:
-	if (!receive (shell))
+	NSS_DEBUG ("nss_exo_tool_user_get()::receive(shell)\n");
+	if (!nss_exo_receive (shell))
 	{
+		NSS_DEBUG ("nss_exo_tool_user_get()::receive(shell)::failed\n");
 		//free (success_text);
 		free (id_text);
 		free (group_id_text);
@@ -127,9 +169,12 @@ enum nss_status nss_exo_tool_user_get (const char * getter_type, const char * ge
 		
 		return NSS_STATUS_UNAVAIL;
 	}
+	NSS_DEBUG ("nss_exo_tool_user_get()::receive(shell)::succeeded\n");
 	
-	if (!receive (home))
+	NSS_DEBUG ("nss_exo_tool_user_get()::receive(home)\n");
+	if (!nss_exo_receive (home))
 	{
+		NSS_DEBUG ("nss_exo_tool_user_get()::receive(home)::failed\n");
 		//free (success_text);
 		free (id_text);
 		free (group_id_text);
@@ -139,9 +184,12 @@ enum nss_status nss_exo_tool_user_get (const char * getter_type, const char * ge
 		
 		return NSS_STATUS_UNAVAIL;
 	}
+	NSS_DEBUG ("nss_exo_tool_user_get()::receive(home)::succeeded\n");
 	
-	if (!receive (gecos))
+	NSS_DEBUG ("nss_exo_tool_user_get()::receive(gecos)\n");
+	if (!nss_exo_receive (gecos))
 	{
+		NSS_DEBUG ("nss_exo_tool_user_get()::receive(gecos)::failed\n");
 		//free (success_text);
 		free (id_text);
 		free (group_id_text);
@@ -152,6 +200,7 @@ enum nss_status nss_exo_tool_user_get (const char * getter_type, const char * ge
 		
 		return NSS_STATUS_UNAVAIL;
 	}
+	NSS_DEBUG ("nss_exo_tool_user_get()::receive(gecos)::succeeded\n");
 	
 	
 	////return 1;
@@ -201,7 +250,7 @@ enum nss_status nss_exo_tool_user_get (const char * getter_type, const char * ge
 	
 	*error = errno;
 	
-	NSS_DEBUG ("user_get : Returning successfully\n");
+	NSS_DEBUG ("nss_exo_tool_user_get()::return::success\n");
 	
 	return NSS_STATUS_SUCCESS;
 }

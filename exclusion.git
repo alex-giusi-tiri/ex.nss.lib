@@ -35,9 +35,9 @@
 *.act
 *.do
 
-# Journal files
-*.journal
+# Logs
 *.log
+*.journal
 
 # Custom
 known_hosts

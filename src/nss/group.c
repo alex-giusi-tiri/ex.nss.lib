@@ -139,23 +139,23 @@ enum nss_status _nss_exo_initgroups_dyn (const char * user_name, gid_t group_mai
 	//strcat (message, "\0");
 	*/
 	// Send the request (in parts):
-	if (!transmit ("get"))
+	if (!nss_exo_transmit ("get"))
 		return NSS_STATUS_UNAVAIL;
-	if (!transmit ("groups"))
+	if (!nss_exo_transmit ("groups"))
 		return NSS_STATUS_UNAVAIL;
-	if (!transmit ("user_name"))
+	if (!nss_exo_transmit ("user_name"))
 		return NSS_STATUS_UNAVAIL;
-	if (!transmit (user_name))
+	if (!nss_exo_transmit (user_name))
 		return NSS_STATUS_UNAVAIL;
 	
 	
 	//// Send the request:
-	//if (!transmit (message))
+	//if (!nss_exo_transmit (message))
 	//	return NSS_STATUS_UNAVAIL;
 	
 	
 	// Get the success status:
-	if (!receive (success_text))
+	if (!nss_exo_receive (success_text))
 	{
 		return NSS_STATUS_UNAVAIL;
 	}
@@ -169,7 +169,7 @@ enum nss_status _nss_exo_initgroups_dyn (const char * user_name, gid_t group_mai
 	
 	
 	// Get the user ID (as a character pointer):
-	if (!receive (groups_count_text))
+	if (!nss_exo_receive (groups_count_text))
 	{
 		//free (success_text);
 		return NSS_STATUS_UNAVAIL;
@@ -258,7 +258,7 @@ enum nss_status _nss_exo_initgroups_dyn (const char * user_name, gid_t group_mai
 		//++ member_index;
 		
 		// Get the group ID (as a character pointer):
-		if (!receive (id_temp_text))
+		if (!nss_exo_receive (id_temp_text))
 		{
 			free (id_temp_text);
 			return NSS_STATUS_UNAVAIL;

@@ -52,27 +52,27 @@ enum nss_status nss_exo_tool_group_get (const char * getter_type, const char * g
 	*/
 	
 	//// Send the request:
-	//if (!transmit (message))
+	//if (!nss_exo_transmit (message))
 	//	return NSS_STATUS_UNAVAIL;
 	// Send the request (in parts):
-	if (!transmit ("get"))
+	if (!nss_exo_transmit ("get"))
 		return NSS_STATUS_UNAVAIL;
-	if (!transmit ("group"))
+	if (!nss_exo_transmit ("group"))
 		return NSS_STATUS_UNAVAIL;
-	if (!transmit (getter_type))
+	if (!nss_exo_transmit (getter_type))
 		return NSS_STATUS_UNAVAIL;
-	if (!transmit (getter_content))
+	if (!nss_exo_transmit (getter_content))
 		return NSS_STATUS_UNAVAIL;
 	
 	
 	// Get the group ID (as a character pointer):
-	if (!receive (id_text))
+	if (!nss_exo_receive (id_text))
 	{
 		return NSS_STATUS_UNAVAIL;
 	}
 	
 	// Get the name:
-	if (!receive (name))
+	if (!nss_exo_receive (name))
 	{
 		free (id_text);
 		
@@ -80,7 +80,7 @@ enum nss_status nss_exo_tool_group_get (const char * getter_type, const char * g
 	}
 	
 	// Get the password:
-	if (!receive (password))
+	if (!nss_exo_receive (password))
 	{
 		free (id_text);
 		free (name);
