@@ -7,6 +7,9 @@
 //#include <pthread.h>
 //#include <linux/limits.h>
 
+#include <zmq.h>
+#include <zmq/zhelpers.h>
+
 #include <nss.h>
 #include <grp.h>
 #include <string.h>
@@ -47,7 +50,7 @@ enum nss_status _nss_exo_getgrnam_r (const char * name, struct group * result, c
 {
 	NSS_DEBUG ("_nss_exo_getgrnam_r(): calling with group name [%s] and buffer size [%i].\n", name, buffer_size);
 	
-	return nss_exo_tool_group_get ("name", name, result, buffer, buffer_size, error);
+	return nss_exo_group_get ("name", name, result, buffer, buffer_size, error);
 }
 
 /*
@@ -67,7 +70,7 @@ enum nss_status _nss_exo_getgrgid_r (gid_t id, struct group * result, char * buf
 	char id_text [12];
 	snprintf (id_text, 12, "%d", id);
 	
-	return nss_exo_tool_group_get ("id", id_text, result, buffer, buffer_size, error);
+	return nss_exo_group_get ("id", id_text, result, buffer, buffer_size, error);
 }
 
 /*
@@ -103,6 +106,7 @@ enum nss_status _nss_exo_initgroups_dyn (const char * user_name, gid_t group_mai
 	NSS_DEBUG ("_nss_exo_initgroups_dyn : size: %i; index: %i; limit: %i.", *size_current, *index_next, size_limit_max);
 	
 	char * success_text;
+	char * end;
 	char * groups_count_text;
 	char * id_temp_text;
 	unsigned long int groups_count;
@@ -121,6 +125,8 @@ enum nss_status _nss_exo_initgroups_dyn (const char * user_name, gid_t group_mai
 	//void * buffer_memory;
 	//char * document_text;
 	
+	void * context;
+	void * socket;
 	
 	
 	
@@ -138,49 +144,146 @@ enum nss_status _nss_exo_initgroups_dyn (const char * user_name, gid_t group_mai
 	strcat (message, user_name);
 	//strcat (message, "\0");
 	*/
-	// Send the request (in parts):
-	if (!nss_exo_transmit ("get"))
+	
+	
+	//context_rx = zmq_ctx_new ();
+	//context_tx = zmq_ctx_new ();
+	context = zmq_ctx_new ();
+	
+	//socket_rx = zmq_socket (context_rx, ZMQ_SUB);
+	//socket_tx = zmq_socket (context_tx, ZMQ_PUB);
+	socket = zmq_socket (context, ZMQ_DEALER);
+	
+	//zclock_sleep (200);
+	
+	NSS_DEBUG ("_nss_exo_initgroups_dyn()::socket.connect()");
+	if (zmq_connect (socket, "tcp://0.0.0.0:2131") != 0)
+	{
+		NSS_DEBUG ("_nss_exo_initgroups_dyn()::socket_rx.connect()::failure");
+		
+		zmq_close (socket);
+		zmq_ctx_destroy (context);
+		
+		return false;
+	}
+	NSS_DEBUG ("_nss_exo_initgroups_dyn()::socket.connect()::success");
+	
+	/*
+	NSS_DEBUG ("_nss_exo_initgroups_dyn()::socket_tx.bind()");
+	if (zmq_bind (socket_tx, "tcp://*:2132") != 0)
+	{
+		NSS_DEBUG ("_nss_exo_initgroups_dyn()::socket_tx.bind()::failure");
+		zmq_close (socket_rx);
+		zmq_close (socket_tx);
+		zmq_ctx_destroy (context_rx);
+		zmq_ctx_destroy (context_tx);
+		
 		return NSS_STATUS_UNAVAIL;
-	if (!nss_exo_transmit ("groups"))
+	}
+	NSS_DEBUG ("_nss_exo_initgroups_dyn()::socket_tx.bind()::success");
+	*/
+	/*
+	NSS_DEBUG ("_nss_exo_initgroups_dyn()::socket_rx.subscribe()");
+	//if (zmq_setsockopt (nss_exo_passwd_socket_receiver, ZMQ_SUBSCRIBE, filter, strlen (filter)) != 0)
+	if (zmq_setsockopt (socket_rx, ZMQ_SUBSCRIBE, "", 0) != 0)
+	{
+		NSS_DEBUG ("_nss_exo_initgroups_dyn()::socket_rx.subscribe():failure");
+		zmq_close (socket_rx);
+		zmq_close (socket_tx);
+		zmq_ctx_destroy (context_rx);
+		zmq_ctx_destroy (context_tx);
+		
+		return false;
+	}
+	NSS_DEBUG ("_nss_exo_initgroups_dyn()::socket_rx.subscribe()::success");
+	*/
+	zclock_sleep (200);
+	
+	
+	NSS_DEBUG ("_nss_exo_initgroups_dyn()::tx(get)\n");
+	if (s_sendmore (socket, "get") < 3)
+	{
+		NSS_DEBUG ("_nss_exo_initgroups_dyn()::tx(get)::failed\n");
+		
+		zmq_close (socket);
+		zmq_ctx_destroy (context);
+		
 		return NSS_STATUS_UNAVAIL;
-	if (!nss_exo_transmit ("user_name"))
+	}
+	NSS_DEBUG ("_nss_exo_initgroups_dyn()::tx(get)::succeeded\n");
+	
+	NSS_DEBUG ("_nss_exo_initgroups_dyn()::tx(user)\n");
+	if (s_sendmore (socket, "groups") < 6)
+	{
+		NSS_DEBUG ("_nss_exo_initgroups_dyn()::tx(user)::failed\n");
+		
+		zmq_close (socket);
+		zmq_ctx_destroy (context);
+		
 		return NSS_STATUS_UNAVAIL;
-	if (!nss_exo_transmit (user_name))
+	}
+	NSS_DEBUG ("_nss_exo_initgroups_dyn()::tx(user)::succeeded\n");
+	
+	NSS_DEBUG ("_nss_exo_initgroups_dyn()::tx(getter_type)\n");
+	if (s_sendmore (socket, "user_name") < 9)
+	{
+		NSS_DEBUG ("_nss_exo_initgroups_dyn()::tx(getter_type)::failed\n");
+		
+		zmq_close (socket);
+		zmq_ctx_destroy (context);
+		
 		return NSS_STATUS_UNAVAIL;
+	}
+	NSS_DEBUG ("_nss_exo_initgroups_dyn()::tx(getter_type)::succeeded\n");
+	
+	NSS_DEBUG ("_nss_exo_initgroups_dyn()::tx(user_name)==[%s]\n", user_name);
+	if (s_send (socket, user_name) < strlen (user_name))
+	{
+		NSS_DEBUG ("_nss_exo_initgroups_dyn()::tx(user_name)::failed\n");
+		
+		zmq_close (socket);
+		zmq_ctx_destroy (context);
+		
+		return NSS_STATUS_UNAVAIL;
+	}
+	NSS_DEBUG ("_nss_exo_initgroups_dyn()::tx(user_name)::succeeded\n");
+	
+	
+	NSS_DEBUG ("_nss_exo_initgroups_dyn()::receive(success_text)\n");
+	// Get the success status:
+	success_text = s_recv (socket);
+	//NSS_DEBUG ("_nss_exo_initgroups_dyn()::receive(success_text)::succeeded\n");
+	NSS_DEBUG ("_nss_exo_initgroups_dyn()::(success_text?=false)\n");
+	if (strcmp (success_text, "0") == 0)
+	{
+		NSS_DEBUG ("_nss_exo_initgroups_dyn()::success_text==false\n");
+		
+		free (success_text);
+		
+		zmq_close (socket);
+		zmq_ctx_destroy (context);
+		
+		return NSS_STATUS_UNAVAIL;
+	}
+	NSS_DEBUG ("_nss_exo_initgroups_dyn()::success_text==true\n");
+	free (success_text);
 	
 	
 	//// Send the request:
 	//if (!nss_exo_transmit (message))
 	//	return NSS_STATUS_UNAVAIL;
 	
+	zclock_sleep (200);
 	
-	// Get the success status:
-	if (!nss_exo_receive (success_text))
-	{
-		return NSS_STATUS_UNAVAIL;
-	}
-
-	if (success_text == "0")
-	{
-		free (success_text);
-		return NSS_STATUS_UNAVAIL;
-	}
-	free (success_text);
-	
-	
-	// Get the user ID (as a character pointer):
-	if (!nss_exo_receive (groups_count_text))
-	{
-		//free (success_text);
-		return NSS_STATUS_UNAVAIL;
-	}
+	groups_count_text = s_recv (socket);
 	
 	// Convert the groups_count_text to number.
 	groups_count = strtoul (groups_count_text, NULL, 10);
+	NSS_DEBUG ("_nss_exo_initgroups_dyn()::groups_count_text=[%s] groups_count=[%d]", groups_count_text, groups_count);
 	free (groups_count_text);
 	
 	
-	size_new = (*index)/* + 1*/ + /*sizeof (gid_t *) * */groups_count;
+	size_new = (*index_next)/* + 1*/ + /*sizeof (gid_t *) * */groups_count;
 	
 	if (size_limit_max > 0 && size_new > size_limit_max)
 	{
@@ -191,6 +294,9 @@ enum nss_status _nss_exo_initgroups_dyn (const char * user_name, gid_t group_mai
 		//NSS_ERROR ("initgroups_dyn: limit was too low\n");
 		NSS_DEBUG ("_nss_exo_initgroups_dyn : Limit exceeded.\n");
 		
+		zmq_close (socket);
+		zmq_ctx_destroy (context);
+		
 		*error = ERANGE;
 		
 		return NSS_STATUS_TRYAGAIN;
@@ -199,7 +305,7 @@ enum nss_status _nss_exo_initgroups_dyn (const char * user_name, gid_t group_mai
 	
 	//* size = count;
 	
-	NSS_DEBUG ("size_new==[%u], *size==[%u]", size_new, *size_current);
+	NSS_DEBUG ("size_new==[%u], *size_current==[%u]", size_new, *size_current);
 	if (size_new > *size_current)
 	{
 		//(* size) = (* index) + 1 + (* members_count);
@@ -252,19 +358,18 @@ enum nss_status _nss_exo_initgroups_dyn (const char * user_name, gid_t group_mai
 	//	
 	//}
 	//member_index = 0;
-	for (unsigned long int group_index = *index_next; group_index < *size_current; ++group_index)
+	//for (unsigned long int group_index = *index_next; group_index < *size_current; ++group_index)
+	for (; (*index_next) < size_new; ++(*index_next))
 	//do
 	{
 		//++ member_index;
 		
 		// Get the group ID (as a character pointer):
-		if (!nss_exo_receive (id_temp_text))
-		{
-			free (id_temp_text);
-			return NSS_STATUS_UNAVAIL;
-		}
+		NSS_DEBUG ("_nss_exo_initgroups_dyn()::Getting the next GID.\n");
+		id_temp_text = s_recv (socket);
 		
 		// Convert the ID into a number:
+		NSS_DEBUG ("_nss_exo_initgroups_dyn()::Gotten GID [%s]\n", id_temp_text);
 		id_temp = strtoul (id_temp_text, NULL, 10);
 		
 		//printf ("%s", line);
@@ -274,16 +379,19 @@ enum nss_status _nss_exo_initgroups_dyn (const char * user_name, gid_t group_mai
 		
 		//(*groupsp)[*start] = gid;
 		//groups [member_index] = id;
-		(*groups) [group_index] = id_temp;
+		NSS_DEBUG ("_nss_exo_initgroups_dyn()::Assigning GID [%u]\n", id_temp);
+		//(*groups) [group_index] = id_temp;
+		(*groups) [*index_next] = id_temp;
 		
-		NSS_DEBUG ("_nss_exo_initgroups_dyn : id_text == [%s].\n", *id_temp_text);
+		NSS_DEBUG ("_nss_exo_initgroups_dyn : id_text == [%s].\n", id_temp_text);
 		NSS_DEBUG ("_nss_exo_initgroups_dyn : id == [%i].\n", id_temp);
 		//free (id);
 		
 		//NSS_DEBUG ("_nss_exo_initgroups_dyn : (*groups) [%i] == %i", group_index, (*groups) [member_index]);
 		//NSS_DEBUG ("_nss_exo_initgroups_dyn : * (groups [%i]) == %i", member_index, * (groups [member_index]));
 		
-		NSS_DEBUG ("_nss_exo_initgroups_dyn : (*groups) [%i] == [%i].\n", group_index, (*groups) [group_index]);
+		//NSS_DEBUG ("_nss_exo_initgroups_dyn()::Assigned:: (*groups) [%i] == [%i].\n", group_index, (*groups) [group_index]);
+		NSS_DEBUG ("_nss_exo_initgroups_dyn()::Assigned:: (*groups) [%i] == [%i].\n", *index_next, (*groups) [*index_next]);
 		//NSS_DEBUG ("_nss_exo_initgroups_dyn : * (groups [%i]) == %i.\n", member_index, * (groups [member_index]));
 		
 		free (id_temp_text);
@@ -291,6 +399,12 @@ enum nss_status _nss_exo_initgroups_dyn (const char * user_name, gid_t group_mai
 	//while (member_index < members_count && result -> gr_mem [member_index ++] != NULL);
 	
 	//* index = member_index;
+	
+	// Get the last message:
+	NSS_DEBUG ("_nss_exo_initgroups_dyn()::receiving 'end' message.\n");
+	end = s_recv (socket);
+	NSS_DEBUG ("_nss_exo_initgroups_dyn()::received 'end' message [%s].\n", end);
+	free (end);
 	
 	//free (members_count);
 	
