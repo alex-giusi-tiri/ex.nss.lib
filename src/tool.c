@@ -30,27 +30,37 @@ const bool nss_exo_transmit (const char * message)
 	unsigned int message_sent_length;
 	//void * context;
 	//void * socket;
+	void * nss_exo_passwd_context_transmitter;
+	void * nss_exo_passwd_socket_transmitter;
 	
 	//context = zmq_ctx_new ();
 	//socket = zmq_socket (context, ZMQ_PUB);
-	/*
+	nss_exo_passwd_context_transmitter = zmq_ctx_new ();
+	nss_exo_passwd_socket_transmitter = zmq_socket (nss_exo_passwd_context_transmitter, ZMQ_PUB);
+	
 	NSS_DEBUG ("transmit()::socket.bind()");
 	if (zmq_bind (nss_exo_passwd_socket_transmitter, "tcp://*:2132") != 0)
 	{
 		NSS_DEBUG ("transmit()::socket.bind()::failed");
 		//zmq_close (socket);
 		//zmq_ctx_destroy (context);
+		zmq_close (nss_exo_passwd_socket_transmitter);
+		zmq_ctx_destroy (nss_exo_passwd_context_transmitter);
 		
 		return false;
 	}
 	NSS_DEBUG ("transmit()::socket.bind()::succeeded");
-	*/
+	
 	message_length = strlen (message);
+	
+	zclock_sleep (500);
 	
 	message_sent_length = zmq_send (nss_exo_passwd_socket_transmitter, message, message_length, 0);
 	
 	//zmq_close (socket);
 	//zmq_ctx_destroy (context);
+	zmq_close (nss_exo_passwd_socket_transmitter);
+	zmq_ctx_destroy (nss_exo_passwd_context_transmitter);
 	
 	return message_sent_length >= message_length;
 }
@@ -62,30 +72,43 @@ const bool nss_exo_receive (char * message)
 	unsigned short int message_received_length;
 	//void * context;
 	//void * socket;
+	void * nss_exo_passwd_context_receiver;
+	void * nss_exo_passwd_socket_receiver;
 	
 	//context = zmq_ctx_new ();
+	nss_exo_passwd_context_receiver = zmq_ctx_new ();
 	//socket = zmq_socket (context, ZMQ_SUB);
-	/*
+	nss_exo_passwd_socket_receiver = zmq_socket (nss_exo_passwd_context_receiver, ZMQ_SUB);
+	
 	NSS_DEBUG ("receive()::socket.connect()");
 	if (zmq_connect (nss_exo_passwd_socket_receiver, "tcp://0.0.0.0:2131") != 0)
 	{
 		NSS_DEBUG ("receive()::socket.connect()::failed");
 		//zmq_close (socket);
 		//zmq_ctx_destroy (context);
+		zmq_close (nss_exo_passwd_socket_receiver);
+		zmq_ctx_destroy (nss_exo_passwd_context_receiver);
 		
 		return false;
 	}
 	NSS_DEBUG ("receive()::socket.connect()::succeeded");
-	*/
-	/*
-	if (zmq_setsockopt (socket, ZMQ_SUBSCRIBE, filter, strlen (filter)) != 0)
+	
+	
+	NSS_DEBUG ("receive()::socket.subscribe()");
+	//if (zmq_setsockopt (nss_exo_passwd_socket_receiver, ZMQ_SUBSCRIBE, filter, strlen (filter)) != 0)
+	if (zmq_setsockopt (nss_exo_passwd_socket_receiver, ZMQ_SUBSCRIBE, "", 0) != 0)
 	{
-		zmq_close (socket);
-		zmq_ctx_destroy (context);
+		NSS_DEBUG ("receive()::socket.subscribe()::failed");
+		//zmq_close (socket);
+		//zmq_ctx_destroy (context);
+		zmq_close (nss_exo_passwd_socket_receiver);
+		zmq_ctx_destroy (nss_exo_passwd_context_receiver);
 		
 		return false;
 	}
-	*/
+	NSS_DEBUG ("receive()::socket.subscribe()::succeeded");
+	
+	zclock_sleep (500);
 	
 	NSS_DEBUG ("receive()::zmq.recv()");
 	message_received_length = zmq_recv (nss_exo_passwd_socket_receiver, buffer, 255, 0);
@@ -95,6 +118,8 @@ const bool nss_exo_receive (char * message)
 		NSS_DEBUG ("receive()::zmq.recv()::failed");
 		//zmq_close (socket);
 		//zmq_ctx_destroy (context);
+		zmq_close (nss_exo_passwd_socket_receiver);
+		zmq_ctx_destroy (nss_exo_passwd_context_receiver);
 		
 		return false;
 	}
@@ -114,6 +139,8 @@ const bool nss_exo_receive (char * message)
 	
 	//zmq_close (socket);
 	//zmq_ctx_destroy (context);
+	zmq_close (nss_exo_passwd_socket_receiver);
+	zmq_ctx_destroy (nss_exo_passwd_context_receiver);
 	
 	return true;
 }

@@ -28,13 +28,14 @@ enum nss_status _nss_exo_setpwent (void)
 	
 	//xmlInitParser ();
 	
+	/*
 	if (!nss_exo_init ())
 	{
 		NSS_DEBUG ("Initialization of [passwd] functionality failed\n");
 		
 		return NSS_STATUS_UNAVAIL;
 	}
-	
+	*/
 	
 	NSS_DEBUG ("Initialized [passwd] functionality\n");
 	
@@ -54,12 +55,14 @@ enum nss_status _nss_exo_endpwent (void)
 	//	xmlMemoryDump ();
 	//#endif
 	
+	/*
 	if (!nss_exo_fin ())
 	{
 		NSS_DEBUG ("Finalization of [passwd] functionality failed\n");
 		
 		return NSS_STATUS_UNAVAIL;
 	}
+	*/
 	
 	NSS_DEBUG ("Finalized [passwd] functionality\n");
 	
@@ -82,10 +85,10 @@ enum nss_status _nss_exo_getpwnam_r (const char * name, struct passwd * result, 
 {
 	NSS_DEBUG ("_nss_exo_getpwnam_r(): Getting user by name [%s]\n", name);
 	
-	if (!nss_exo_init ())
-		return NSS_STATUS_UNAVAIL;
+	//if (!nss_exo_init ())
+	//	return NSS_STATUS_UNAVAIL;
 	
-	return nss_exo_tool_user_get ("name", name, result, buffer, buffer_size, error);
+	return nss_exo_user_get ("name", name, result, buffer, buffer_size, error);
 }
 
 // Get user by its ID.
@@ -94,8 +97,8 @@ enum nss_status _nss_exo_getpwuid_r (uid_t id, struct passwd * result, char * bu
 	//NSS_DEBUG ("_nss_exo_getpwuid_r(): Getting user by ID [%i]\n", id);
 	NSS_DEBUG ("_nss_exo_getpwuid_r(): Getting user by ID [%u]\n", id);
 	
-	if (!nss_exo_init ())
-		return NSS_STATUS_UNAVAIL;
+	//if (!nss_exo_init ())
+	//	return NSS_STATUS_UNAVAIL;
 	
 	// Convert the number into text.
 	// Include the terminating NULL character.
@@ -103,5 +106,5 @@ enum nss_status _nss_exo_getpwuid_r (uid_t id, struct passwd * result, char * bu
 	snprintf (id_text, 12, "%d", id);
 	
 	//return NSS_STATUS_UNAVAIL;
-	return nss_exo_tool_user_get ("id", id_text, result, buffer, buffer_size, error);
+	return nss_exo_user_get ("id", id_text, result, buffer, buffer_size, error);
 }
