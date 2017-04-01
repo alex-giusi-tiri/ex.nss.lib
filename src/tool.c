@@ -1,20 +1,23 @@
 //#ifndef nss_exo_tool_c
 //#define nss_exo_tool_c
 
-#include "nss.exo.h"
 #include "tool.h"
+//#include "nss.exo.h"
 
+/*
 #include <stdbool.h>
 #include <string.h>
+*/
+
 //#include <malloc.h>
 //#include <errno.h>
 /*
-#include <errno.h>
 #include <grp.h>
 #include <pwd.h>
-#include <sqlite3.h>
 */
-#include <zmq.h>
+
+//#include <sqlite3.h>
+//#include <zmq.h>
 
 /*
 void fn_tst (void)
@@ -23,6 +26,7 @@ void fn_tst (void)
 }
 */
 
+/*
 //const bool transmit (const char * message, const char * uri)
 const bool nss_exo_transmit (const char * message)
 {
@@ -177,15 +181,6 @@ const bool nss_exo_init (void)
 {
 	NSS_DEBUG ("Initializing [passwd] functionality...\n");
 	
-	/*
-		This initialize the library and check potential ABI mismatches
-		between the version it was compiled for and the actual shared
-		library used.
-	*/
-	//LIBXML_TEST_VERSION
-	
-	//xmlInitParser ();
-	
 	if (nss_exo_passwd_context_receiver == NULL)
 		nss_exo_passwd_context_receiver = zmq_ctx_new ();
 	if (nss_exo_passwd_context_transmitter == NULL)
@@ -258,5 +253,6 @@ const bool nss_exo_init (void)
 	
 	return true;
 }
+*/
 
 //#endif

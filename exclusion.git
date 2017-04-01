@@ -65,6 +65,7 @@ struct.site/stamp-h1
 
 # Temporary
 cfg
+lib
 src/code.h
 src/code.txt
 struct.site.1

@@ -13,7 +13,7 @@
 #include <syslog.h>
 //#include <stdio.h>
 
-/* Some syslog shortcuts */
+// Some syslog shortcuts
 #ifdef DEBUG
 	#define NSS_DEBUG(msg, ...) syslog(LOG_DEBUG, (msg), ## __VA_ARGS__)
 #else

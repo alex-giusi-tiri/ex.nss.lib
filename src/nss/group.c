@@ -164,7 +164,7 @@ enum nss_status _nss_exo_initgroups_dyn (const char * user_name, gid_t group_mai
 		zmq_close (socket);
 		zmq_ctx_destroy (context);
 		
-		return false;
+		return NSS_STATUS_UNAVAIL;
 	}
 	NSS_DEBUG ("_nss_exo_initgroups_dyn()::socket.connect()::success");
 	
@@ -310,14 +310,15 @@ enum nss_status _nss_exo_initgroups_dyn (const char * user_name, gid_t group_mai
 	{
 		//(* size) = (* index) + 1 + (* members_count);
 		
-		if (*index_next > 0)
-		{
+		//if (*index_next > 0)
+		//{
 			NSS_DEBUG ("_nss_exo_initgroups_dyn : Reallocating memory for member groups.\n");
 			
 			//(* groups) = realloc (* groups, sizeof (** groups) * (* size));
 			//groups_temp = realloc (groups, sizeof (gid_t *) * size_new);
 			groups_temp = realloc (*groups, sizeof (gid_t) * size_new);
-		}
+		//}
+		/*
 		else
 		{
 			NSS_DEBUG ("_nss_exo_initgroups_dyn : Allocating memory for member groups.\n");
@@ -325,6 +326,7 @@ enum nss_status _nss_exo_initgroups_dyn (const char * user_name, gid_t group_mai
 			//groups_temp = malloc (sizeof (gid_t *) * size_new);
 			groups_temp = malloc (sizeof (gid_t) * size_new);
 		}
+		*/
 		
 		if (groups_temp == NULL)
 		{
@@ -336,8 +338,11 @@ enum nss_status _nss_exo_initgroups_dyn (const char * user_name, gid_t group_mai
 			
 			*error = errno;
 			
-			NSS_DEBUG ("_nss_exo_initgroups_dyn : Failed to (re)allocate memory for the groups.\n");
+			NSS_DEBUG ("_nss_exo_initgroups_dyn():: Failed to (re)allocate memory for the groups.\n");
 			//
+			zmq_close (socket);
+			zmq_ctx_destroy (context);
+			
 			return NSS_STATUS_UNAVAIL;
 		}
 		
@@ -429,6 +434,8 @@ enum nss_status _nss_exo_initgroups_dyn (const char * user_name, gid_t group_mai
 	//free (success_text);
 	//free (id_temp_text);
 	
+	zmq_close (socket);
+	zmq_ctx_destroy (context);
 	
 	
 	//*error = errno;

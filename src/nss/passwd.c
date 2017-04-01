@@ -11,7 +11,7 @@
 //#include <grp.h>
 #include <pwd.h>
 
-#include <zmq.h>
+//#include <zmq.h>
 
 // Initialize getpwent functionality:
 // Setup everything needed to retrieve passwd entries.

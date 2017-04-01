@@ -16,6 +16,9 @@ AC_ARG_ENABLE(debug,
     AC_DEFINE([DEBUG], [], [Enable debugging])
     CFLAGS="$CFLAGS -g")
 
+#AC_DEFINE_UNQUOTED(MODULE_NAME, "$MODULE_NAME", [The name of the NSS and PAM modules.])
+#AC_DEFINE_UNQUOTED(NSS_NAME(NAME), [_nss_${MODULE_NAME}_##NAME], [Expand to NSS symbol name.])
+#AC_DEFINE_UNQUOTED(PAM_NAME(NAME), [_pam_${MODULE_NAME}_##NAME], [Expand to PAM symbol name.])
 
 #CFLAGS="$CFLAGS $(xml2-config --cflags) $(xml2-config --libs)"
 CFLAGS="$CFLAGS -lczmq -lzmq"
